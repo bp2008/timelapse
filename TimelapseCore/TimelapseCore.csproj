@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TimelapseCore</RootNamespace>
+    <AssemblyName>TimelapseCore</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ComparisonComparer.cs" />
+    <Compile Include="Configuration\CameraSpec.cs" />
+    <Compile Include="Configuration\FieldSettable.cs" />
+    <Compile Include="Configuration\ProxyConfig.cs" />
+    <Compile Include="Configuration\SerializableObjectBase.cs" />
+    <Compile Include="Configuration\User.cs" />
+    <Compile Include="Globals.cs" />
+    <Compile Include="Hash.cs" />
+    <Compile Include="HttpServer\Crypto\CertProperties.cs" />
+    <Compile Include="HttpServer\Crypto\CryptContext.cs" />
+    <Compile Include="HttpServer\Crypto\CryptKey.cs" />
+    <Compile Include="HttpServer\Crypto\DisposableObject.cs" />
+    <Compile Include="HttpServer\Crypto\KeyExchangeKey.cs" />
+    <Compile Include="HttpServer\Crypto\KeyType.cs" />
+    <Compile Include="HttpServer\Crypto\SignatureKey.cs" />
+    <Compile Include="HttpServer\Crypto\Win32ErrorHelper.cs" />
+    <Compile Include="HttpServer\Crypto\Win32Native.cs" />
+    <Compile Include="HttpServer\Mime.cs" />
+    <Compile Include="HttpServer\SimpleHttpServer.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="TimelapseWrapper.cs" />
+    <Compile Include="Pages\Admin\AdminBase.cs" />
+    <Compile Include="Pages\Admin\Cameras.cs" />
+    <Compile Include="Pages\Admin\EditItem.cs" />
+    <Compile Include="Pages\Admin\Login.cs" />
+    <Compile Include="Pages\Admin\Main.cs" />
+    <Compile Include="Pages\Admin\Users.cs" />
+    <Compile Include="Pages\Login.cs" />
+    <Compile Include="Session.cs" />
+    <Compile Include="SessionManager.cs" />
+    <Compile Include="TimelapseServer.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Util.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
