@@ -20,13 +20,7 @@ namespace TimelapseCore
 	public class Logger
 	{
 		public static LoggingMode logType = LoggingMode.Console | LoggingMode.File;
-		public static string logFilePath;
 		private static object lockObj = new object();
-		static Logger()
-		{
-			string applicationDirectory = new FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).Directory.FullName;
-			logFilePath = Path.Combine(applicationDirectory, "TimelapseErrors.txt");
-		}
 		public static void Debug(Exception ex, string additionalInformation = "")
 		{
 			if (additionalInformation == null)
@@ -74,7 +68,7 @@ namespace TimelapseCore
 					{
 						try
 						{
-							File.AppendAllText(logFilePath, debugMessage.ToString());
+							File.AppendAllText(Globals.ApplicationDirectoryBase + "TimelapseErrors.txt", debugMessage.ToString());
 							attempts = 10;
 						}
 						catch (Exception)
@@ -110,7 +104,7 @@ namespace TimelapseCore
 					{
 						try
 						{
-							File.AppendAllText(logFilePath, DateTime.Now.ToString() + Environment.NewLine + message + Environment.NewLine);
+							File.AppendAllText(Globals.ApplicationDirectoryBase + "TimelapseErrors.txt", DateTime.Now.ToString() + Environment.NewLine + message + Environment.NewLine);
 							attempts = 10;
 						}
 						catch (Exception)

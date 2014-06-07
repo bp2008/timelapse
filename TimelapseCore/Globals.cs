@@ -26,6 +26,7 @@ namespace TimelapseCore
 			applicationDirectoryBase = applicationRoot + "/";
 			configFilePath = applicationDirectoryBase + "Config.cfg";
 			wwwDirectoryBase = applicationRoot + "/www/";
+			imageArchiveDirectoryBase = applicationRoot + "/imgarchive/";
 		}
 		private static string executablePath;
 		private static string applicationRoot;
@@ -59,6 +60,14 @@ namespace TimelapseCore
 		public static string WWWDirectoryBase
 		{
 			get { return wwwDirectoryBase; }
+		}
+		private static string imageArchiveDirectoryBase;
+		/// <summary>
+		/// Gets the full path to the images directory including the trailing '/'.  Just add page name!
+		/// </summary>
+		public static string ImageArchiveDirectoryBase
+		{
+			get { return imageArchiveDirectoryBase; }
 		}
 		public static string Version = "0.1";
 	}

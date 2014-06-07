@@ -9,6 +9,7 @@ using SimpleHttp;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Net.Sockets;
+using TimelapseCore.Configuration;
 
 namespace TimelapseCore
 {
@@ -24,6 +25,13 @@ namespace TimelapseCore
 			try
 			{
 				string requestedPage = Uri.UnescapeDataString(p.request_url.AbsolutePath.TrimStart('/'));
+				string requestedPageLower = requestedPage.ToLower();
+
+				if (requestedPage == "")
+				{
+					p.writeRedirect("admin/main");
+					return;
+				}
 
 				if (requestedPage == "admin")
 				{
@@ -60,323 +68,138 @@ namespace TimelapseCore
 					Pages.Admin.AdminPage.HandleRequest(adminPage, p, s);
 					return;
 				}
-				//        else if (requestedPage.StartsWith("image/"))
-				//        {
-				//            requestedPage = requestedPage.Substring("image/".Length);
-				//            #region image/
-				//            if (requestedPage.EndsWith(".jpg") || requestedPage.EndsWith(".jpeg") || requestedPage.EndsWith(".png") || requestedPage.EndsWith(".webp"))
-				//            {
-				//                int extensionLength = requestedPage[requestedPage.Length - 4] == '.' ? 4 : 5;
-				//                string format = requestedPage.Substring(requestedPage.Length - (extensionLength - 1));
-				//                string cameraId = requestedPage.Substring(0, requestedPage.Length - extensionLength);
-				//                cameraId = cameraId.ToLower();
-
-				//                int minPermission = cm.GetCameraMinPermission(cameraId);
-				//                if (minPermission == 101)
-				//                {
-				//                    p.writeFailure();
-				//                    return;
-				//                }
-				//                if ((s == null && minPermission > 0) || (s != null && s.permission < minPermission))
-				//                {
-				//                    LogOutUser(p, s);
-				//                    return;
-				//                }
-				//                IPCameraBase cam = cm.GetCamera(cameraId);
-				//                byte[] latestImage = cm.GetLatestImage(cameraId);
-				//                int patience = p.GetIntParam("patience");
-				//                if (patience > 0)
-				//                {
-				//                    if (patience > 5000)
-				//                        patience = 5000;
-
-				//                    int timeLeft = patience;
-				//                    System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
-				//                    timer.Start();
-				//                    while (s.DuplicateImageSendCheck(cameraId, latestImage) && cam != null && timeLeft > 0)
-				//                    {
-				//                        // The latest image was already sent to the user in a previous image request.
-				//                        // Wait for up to 5 seconds as desired by the user to get a "new" image.
-				//                        cam.newFrameWaitHandle.WaitOne(Math.Max(50, timeLeft));  // This EventWaitHandle nonsense isn't perfect, so this should prevent excessively long delays in the event of a timing error.
-				//                        latestImage = cm.GetLatestImage(cameraId);
-				//                        timeLeft = patience - (int)timer.ElapsedMilliseconds;
-				//                    }
-				//                }
-				//                ImageFormat imgFormat = ImageFormat.Jpeg;
-				//                latestImage = ImageConverter.HandleRequestedConversionIfAny(latestImage, p, ref imgFormat, format);
-				//                p.writeSuccess(Util.GetMime(imgFormat), latestImage.Length);
-				//                p.outputStream.Flush();
-				//                p.rawOutputStream.Write(latestImage, 0, latestImage.Length);
-				//            }
-				//            else if (requestedPage.EndsWith(".mjpg"))
-				//            {
-				//                string cameraId = requestedPage.Substring(0, requestedPage.Length - 5);
-				//                cameraId = cameraId.ToLower();
-				//                int minPermission = cm.GetCameraMinPermission(cameraId);
-				//                if (minPermission == 101)
-				//                {
-				//                    p.writeFailure();
-				//                    return;
-				//                }
-				//                if ((s == null && minPermission > 0) || (s != null && s.permission < minPermission))
-				//                {
-				//                    LogOutUser(p, s);
-				//                    return;
-				//                }
-				//                if (cm.GetLatestImage(cameraId).Length == 0)
-				//                    return;
-				//                p.writeSuccess("multipart/x-mixed-replace;boundary=ipcamera");
-				//                byte[] newImage;
-				//                byte[] lastImage = null;
-				//                while (!this.stopRequested)
-				//                {
-				//                    try
-				//                    {
-				//                        newImage = cm.GetLatestImage(cameraId);
-				//                        while (newImage == lastImage)
-				//                        {
-				//                            Thread.Sleep(1);
-				//                            newImage = cm.GetLatestImage(cameraId);
-				//                        }
-				//                        lastImage = newImage;
-
-				//                        ImageFormat imgFormat = ImageFormat.Jpeg;
-				//                        byte[] sendImage = ImageConverter.HandleRequestedConversionIfAny(newImage, p, ref imgFormat);
-
-				//                        p.outputStream.WriteLine("--ipcamera");
-				//                        p.outputStream.WriteLine("Content-Type: " + Util.GetMime(imgFormat));
-				//                        p.outputStream.WriteLine("Content-Length: " + sendImage.Length);
-				//                        p.outputStream.WriteLine();
-				//                        p.outputStream.Flush();
-				//                        p.rawOutputStream.Write(sendImage, 0, sendImage.Length);
-				//                        p.rawOutputStream.Flush();
-				//                        p.outputStream.WriteLine();
-				//                    }
-				//                    catch (Exception ex)
-				//                    {
-				//                        if (!p.isOrdinaryDisconnectException(ex))
-				//                            Logger.Debug(ex);
-				//                        break;
-				//                    }
-				//                }
-				//            }
-				//            else if (requestedPage.EndsWith(".cam"))
-				//            {
-				//                string cameraId = requestedPage.Substring(0, requestedPage.Length - 4);
-				//                cameraId = cameraId.ToLower();
-				//                int minPermission = cm.GetCameraMinPermission(cameraId);
-				//                if (minPermission == 101)
-				//                {
-				//                    p.writeFailure();
-				//                    return;
-				//                }
-				//                if ((s == null && minPermission > 0) || (s != null && s.permission < minPermission))
-				//                {
-				//                    LogOutUser(p, s);
-				//                    return;
-				//                }
-
-				//                string userAgent = p.GetHeaderValue("User-Agent", "");
-				//                bool isMobile = userAgent.Contains("iPad") || userAgent.Contains("iPhone") || userAgent.Contains("Android") || userAgent.Contains("BlackBerry");
-
-				//                bool isLanConnection = p == null ? false : p.IsLanConnection;
-				//                int defaultRefresh = isLanConnection && !isMobile ? -1 : 250;
-				//                string html = CamPage.GetHtml(cameraId, !isMobile, p.GetIntParam("refresh", defaultRefresh), p.GetBoolParam("override") ? -1 : 600000, p);
-				//                if (string.IsNullOrEmpty(html) || html == "NO")
-				//                {
-				//                    p.writeFailure();
-				//                    return;
-				//                }
-				//                p.writeSuccess("text/html");
-				//                p.outputStream.Write(html);
-				//            }
-				//            else if (requestedPage == "PTZPRESETIMG")
-				//            {
-				//                string cameraId = p.GetParam("id");
-				//                cameraId = cameraId.ToLower();
-				//                IPCameraBase cam = cm.GetCamera(cameraId);
-				//                if (cam != null)
-				//                {
-				//                    int index = p.GetIntParam("index", -1);
-				//                    if (index > -1)
-				//                    {
-				//                        if (cam.cameraSpec.ptz_proxy)
-				//                        {
-				//                            string auth = (!string.IsNullOrEmpty(cam.cameraSpec.ptz_username) && !string.IsNullOrEmpty(cam.cameraSpec.ptz_password)) ? "rawauth=" + HttpUtility.UrlEncode(cam.cameraSpec.ptz_username) + ":" + HttpUtility.UrlEncode(cam.cameraSpec.ptz_password) + "&" : "";
-				//                            byte[] data = SimpleProxy.GetData("http://" + cam.cameraSpec.ptz_hostName + "/PTZPRESETIMG?" + auth + "id=" + HttpUtility.UrlEncode(cam.cameraSpec.ptz_proxy_cameraId) + "&index=" + index);
-				//                            if (data.Length > 0)
-				//                            {
-				//                                p.writeSuccess("image/jpg", data.Length);
-				//                                p.outputStream.Flush();
-				//                                p.rawOutputStream.Write(data, 0, data.Length);
-				//                                return;
-				//                            }
-				//                        }
-				//                        else
-				//                        {
-				//                            string fileName = Globals.ThumbsDirectoryBase + cameraId + index + ".jpg";
-				//                            int minPermission = cm.GetCameraMinPermission(cameraId);
-				//                            if ((s == null && minPermission > 0) || (s != null && s.permission < minPermission) || minPermission == 101)
-				//                            {
-				//                            }
-				//                            else
-				//                            {
-				//                                if (File.Exists(fileName))
-				//                                {
-				//                                    byte[] bytes = File.ReadAllBytes(fileName);
-				//                                    p.writeSuccess("image/jpg", bytes.Length);
-				//                                    p.outputStream.Flush();
-				//                                    p.rawOutputStream.Write(bytes, 0, bytes.Length);
-				//                                    return;
-				//                                }
-				//                            }
-				//                        }
-				//                    }
-				//                }
-				//                { // Failed to get image thumbnail
-				//                    byte[] bytes = File.ReadAllBytes(Globals.WWWPublicDirectoryBase + "Images/qmark.png");
-				//                    p.writeSuccess("image/png", bytes.Length);
-				//                    p.outputStream.Flush();
-				//                    p.rawOutputStream.Write(bytes, 0, bytes.Length);
-				//                    return;
-				//                }
-				//            }
-				//            else if (requestedPage.EndsWith(".wanscamstream"))
-				//            {
-				//                string cameraId = requestedPage.Substring(0, requestedPage.Length - ".wanscamstream".Length);
-				//                IPCameraBase cam = cm.GetCamera(cameraId);
-				//                if (cam == null)
-				//                    return;
-				//                if (!cam.cameraSpec.wanscamCompatibilityMode)
-				//                    return;
-				//                if (p.RemoteIPAddress != "127.0.0.1")
-				//                    return;
-				//                Uri url = new Uri(cam.cameraSpec.imageryUrl);
-				//                string host = url.Host;
-				//                int port = url.Port;
-				//                string path = url.PathAndQuery;
-				//                //string path = "/livestream.cgi?user=admin&pwd=nooilwell&streamid=0&audio=0&filename=";
-				//                //string path = "/videostream.cgi?user=admin&pwd=nooilwell&resolution=8";
-				//                int total = 0;
-				//                try
-				//                {
-				//                    //Console.WriteLine("opening");
-				//                    Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-				//                    socket.Connect(host, port);
-				//                    byte[] buffer = new byte[4096];
-				//                    socket.Send(UTF8Encoding.UTF8.GetBytes("GET " + path + " HTTP/1.1\r\nHost: " + host + ":" + port + "\r\nConnection: close\r\n\r\n"));
-				//                    //Console.WriteLine("open");
-				//                    int read = socket.Receive(buffer);
-				//                    p.writeSuccess("video/raw");
-				//                    p.outputStream.Flush();
-				//                    while (read > 0 && socket.Connected && p.tcpClient.Connected)
-				//                    {
-				//                        p.rawOutputStream.Write(buffer, 0, read);
-				//                        total += read;
-				//                        //Console.WriteLine(read);
-				//                        read = socket.Receive(buffer);
-				//                    }
-				//                    //Console.WriteLine("close");
-				//                }
-				//                catch (Exception ex)
-				//                {
-				//                    if (!p.isOrdinaryDisconnectException(ex))
-				//                        Logger.Debug(ex);
-				//                }
-				//            }
-				//            #endregion
-				//        }
-				//        else if (requestedPage.StartsWith("control/"))
-				//        {
-				//            requestedPage = requestedPage.Substring("control/".Length);
-				//            #region control/
-				//            if (requestedPage == "keepalive")
-				//            {
-				//                string cameraId = p.GetParam("id");
-				//                cameraId = cameraId.ToLower();
-				//                int minPermission = cm.GetCameraMinPermission(cameraId);
-				//                if (minPermission == 101)
-				//                {
-				//                    p.writeFailure();
-				//                    return;
-				//                }
-				//                if ((s == null && minPermission > 0) || (s != null && s.permission < minPermission))
-				//                {
-				//                    p.writeFailure("403 Forbidden");
-				//                    return;
-				//                }
-				//                cm.GetRTSPUrl(cameraId, p);
-				//                p.writeSuccess("text/plain");
-				//                p.outputStream.Write("1");
-				//            }
-
-				//            else if (requestedPage == "PTZ")
-				//            {
-				//                string cameraId = p.GetParam("id");
-				//                cameraId = cameraId.ToLower();
-				//                int minPermission = cm.GetCameraMinPermission(cameraId);
-				//                if (minPermission == 101)
-				//                {
-				//                    p.writeFailure();
-				//                    return;
-				//                }
-				//                if ((s == null && minPermission > 0) || (s != null && s.permission < minPermission))
-				//                {
-				//                    LogOutUser(p, s);
-				//                    return;
-				//                }
-				//                PTZ.RunCommand(cameraId, p.GetParam("cmd"));
-				//                p.writeSuccess("text/plain");
-				//            }
-				//            #endregion
-				//        }
+				else if (requestedPage == "Navigation")
+				{
+					CameraSpec cs = TimelapseWrapper.cfg.GetCameraSpec(p.GetParam("cam"));
+					if (cs == null)
+						p.writeFailure("400 Bad Request");
+					else
+					{
+						string path = p.GetParam("path");
+						p.writeSuccess();
+						p.outputStream.Write(Navigation.GetNavHtml(cs, path));
+					}
+				}
+				else if (requestedPage == "TimeZoneList")
+				{
+					p.writeSuccess();
+					p.outputStream.Write(Pages.TimeZoneList.GetHtml());
+				}
+				else if (requestedPageLower.StartsWith("imgarchive/"))
+				{
+					p.writeFailure();
+				}
 				else
 				{
-					#region www
-					DirectoryInfo WWWDirectory = new DirectoryInfo(Globals.WWWDirectoryBase);
-					string wwwDirectoryBase = WWWDirectory.FullName.Replace('\\', '/').TrimEnd('/') + '/';
-					FileInfo fi = new FileInfo(wwwDirectoryBase + requestedPage);
-					string targetFilePath = fi.FullName.Replace('\\', '/');
-					if (!targetFilePath.StartsWith(wwwDirectoryBase) || targetFilePath.Contains("../"))
+					CameraSpec cs = null;
+					if (p.request_url.Segments.Length > 1)
+						cs = TimelapseWrapper.cfg.GetCameraSpec(p.request_url.Segments[1].Trim('/'));
+					if (cs != null)
 					{
-						p.writeFailure("400 Bad Request");
-						return;
-					}
-					if (!fi.Exists)
-					{
-						// This should be just a 404 error, but that causes ASP.NET to try to handle the request with another handler.  Like the static file handler.  Which we don't want.
-						p.writeFailure("400 Bad Request");
-						return;
-					}
-
-					if ((fi.Extension == ".html" || fi.Extension == ".htm") && fi.Length < 256000)
-					{
-						p.writeSuccess(Mime.GetMimeType(fi.Extension));
-						string html = File.ReadAllText(fi.FullName);
-						try
+						// This page is something involving a camera we have configured
+						if (p.request_url.Segments.Length == 2)
 						{
-							html = html.Replace("%REMOTEIP%", p.RemoteIPAddress);
+							// Return the camera page for this camera
+							p.writeRedirect("Camera.html?cam=" + cs.id);
 						}
-						catch (Exception ex)
+						else if (p.request_url.Segments.Length >= 3)
 						{
-							Logger.Debug(ex);
+							if (p.request_url.Segments.Length == 3 && p.request_url.Segments[2] == "latest.jpg")
+							{
+								string path = cs.id + "/" + Navigation.GetLatestImagePath(cs);
+								if (path == p.GetHeaderValue("if-none-match"))
+								{
+									p.writeSuccess("image/jpeg", -1, "304 Not Modified");
+									return;
+								}
+								byte[] data = GetImageData(path);
+								p.writeSuccess("image/jpeg", data.Length, additionalHeaders: GetCacheEtagHeaders(TimeSpan.Zero, path));
+								p.outputStream.Flush();
+								p.rawOutputStream.Write(data, 0, data.Length);
+							}
+							else
+							{
+								if (requestedPage == p.GetHeaderValue("if-none-match"))
+								{
+									p.writeSuccess("image/jpeg", -1, "304 Not Modified");
+									return;
+								}
+								byte[] data = GetImageData(requestedPage);
+								p.writeSuccess("image/jpeg", data.Length, additionalHeaders: GetCacheEtagHeaders(TimeSpan.FromDays(365), requestedPage));
+								p.outputStream.Flush();
+								p.rawOutputStream.Write(data, 0, data.Length);
+							}
 						}
-						p.outputStream.Write(html);
-						p.outputStream.Flush();
+						else
+							p.writeFailure();
 					}
 					else
 					{
-						List<KeyValuePair<string, string>> additionalHeaders = new List<KeyValuePair<string, string>>();
-						additionalHeaders.Add(new KeyValuePair<string, string>("Cache-Control", "max-age=3600, public"));
-						p.writeSuccess(Mime.GetMimeType(fi.Extension), additionalHeaders: additionalHeaders);
-						p.outputStream.Flush();
-						using (FileStream fs = fi.OpenRead())
+						#region www
+						DirectoryInfo WWWDirectory = new DirectoryInfo(Globals.WWWDirectoryBase);
+						string wwwDirectoryBase = WWWDirectory.FullName.Replace('\\', '/').TrimEnd('/') + '/';
+						FileInfo fi = new FileInfo(wwwDirectoryBase + requestedPage);
+						string targetFilePath = fi.FullName.Replace('\\', '/');
+						if (!targetFilePath.StartsWith(wwwDirectoryBase) || targetFilePath.Contains("../"))
 						{
-							fs.CopyTo(p.rawOutputStream);
+							p.writeFailure("400 Bad Request");
+							return;
 						}
-						p.rawOutputStream.Flush();
+						if (!fi.Exists)
+						{
+							// This should be just a 404 error, but that causes ASP.NET to try to handle the request with another handler.  Like the static file handler.  Which we don't want.
+							p.writeFailure("400 Bad Request");
+							return;
+						}
+
+						if ((fi.Extension == ".html" || fi.Extension == ".htm") && fi.Length < 256000)
+						{
+							string html = File.ReadAllText(fi.FullName);
+							if (fi.Name.ToLower() == "camera.html")
+							{
+								// camera.html triggers special behavior
+								string camId = p.GetParam("cam");
+								cs = TimelapseWrapper.cfg.GetCameraSpec(camId);
+								if (cs == null || !MaintainCamera(cs))
+								{
+									p.writeFailure("400 Bad Request");
+									return;
+								}
+								html = html.Replace("%NAVMENU%", Navigation.GetNavHtml(cs, Navigation.GetLatestPath(cs)));
+								html = html.Replace("%CAMID%", cs.id);
+								html = html.Replace("%CAMNAME%", cs.name);
+								string latestImagePath = cs.id + "/" + Navigation.GetLatestImagePath(cs) + ".jpg";
+								html = html.Replace("%LATEST_IMAGE%", latestImagePath);
+							}
+							try
+							{
+								html = html.Replace("%REMOTEIP%", p.RemoteIPAddress);
+							}
+							catch (Exception ex)
+							{
+								Logger.Debug(ex);
+							}
+							p.writeSuccess(Mime.GetMimeType(fi.Extension));
+							p.outputStream.Write(html);
+							p.outputStream.Flush();
+						}
+						else
+						{
+							if (fi.LastWriteTimeUtc.ToString("R") == p.GetHeaderValue("if-modified-since"))
+							{
+								p.writeSuccess("image/jpeg", -1, "304 Not Modified");
+								return;
+							}
+							p.writeSuccess(Mime.GetMimeType(fi.Extension), additionalHeaders: GetCacheLastModifiedHeaders(TimeSpan.FromDays(1), fi.LastWriteTimeUtc));
+							p.outputStream.Flush();
+							using (FileStream fs = fi.OpenRead())
+							{
+								fs.CopyTo(p.rawOutputStream);
+							}
+							p.rawOutputStream.Flush();
+						}
+						#endregion
 					}
-					#endregion
 				}
 			}
 			catch (Exception ex)
@@ -384,6 +207,185 @@ namespace TimelapseCore
 				if (!p.isOrdinaryDisconnectException(ex))
 					Logger.Debug(ex);
 			}
+		}
+
+		private List<KeyValuePair<string, string>> GetCacheEtagHeaders(TimeSpan maxAge, string etag)
+		{
+			List<KeyValuePair<string, string>> additionalHeaders = new List<KeyValuePair<string, string>>();
+			additionalHeaders.Add(new KeyValuePair<string, string>("Cache-Control", "max-age=" + (long)maxAge.TotalSeconds + ", public"));
+			additionalHeaders.Add(new KeyValuePair<string, string>("ETag", etag));
+			return additionalHeaders;
+		}
+		private List<KeyValuePair<string, string>> GetCacheLastModifiedHeaders(TimeSpan maxAge, DateTime lastModifiedUTC)
+		{
+			List<KeyValuePair<string, string>> additionalHeaders = new List<KeyValuePair<string, string>>();
+			additionalHeaders.Add(new KeyValuePair<string, string>("Cache-Control", "max-age=" + (long)maxAge.TotalSeconds + ", public"));
+			additionalHeaders.Add(new KeyValuePair<string, string>("Last-Modified", lastModifiedUTC.ToString("R")));
+			return additionalHeaders;
+		}
+
+		private byte[] GetImageData(string path)
+		{
+			FileInfo fi = new FileInfo(Globals.ImageArchiveDirectoryBase + path);
+			string fileName = fi.Name.EndsWith(".jpg") ? fi.Name.Remove(fi.Name.Length - ".jpg".Length) : fi.Name;
+			FileInfo bundleFile = new FileInfo(fi.Directory.FullName.TrimEnd('/', '\\') + ".bdl");
+			if (bundleFile.Exists)
+			{
+				IDictionary<string, byte[]> data = FileBundle.FileBundleManager.GetFiles(bundleFile.FullName, fileName);
+				if (data.Count == 1)
+					return data[fileName];
+			}
+			return new byte[0];
+		}
+
+		private bool MaintainCamera(CameraSpec cs)
+		{
+			if (cs == null)
+				return false;
+
+			// This maintenance lock ensures that only one request tries to maintain the files at once.  Additional concurrent requests simply skip the maintenance step.
+			if (cs.MaintenanceLock.Wait(0))
+			{
+				try
+				{
+
+					if (HttpContext.Current != null && HttpContext.Current.Server != null)
+						HttpContext.Current.Server.ScriptTimeout = 120;
+
+					// A long-neglected camera will take a long time to maintain.
+					// We don't want this request to time out because that could lead to file corruption.
+					// So we will try not to spend longer than 25 seconds total, but with a minimum of 10 seconds of actual file copying.
+
+					Stopwatch watchTotal = new Stopwatch();
+					watchTotal.Start();
+
+					DirectoryInfo diRoot = new DirectoryInfo(Globals.ApplicationDirectoryBase + cs.path_imgdump);
+					if (!diRoot.Exists)
+						diRoot.Create();
+
+
+					FileInfo[] fis = diRoot.GetFiles("*.jpg", SearchOption.TopDirectoryOnly);
+					Array.Sort(fis, new FileSystemInfoComparer());
+
+
+					if (fis.Length > 0)
+					{
+
+						Regex rxDateTime = null;
+						if (cs.timestampType == TimestampType.Regular_Expression)
+							rxDateTime = new Regex(cs.timestamp_regex_input);
+
+						Dictionary<string, byte[]> filesToSave = new Dictionary<string, byte[]>();
+
+						Stopwatch watchCopying = new Stopwatch();
+						watchCopying.Start();
+
+						foreach (FileInfo fi in fis)
+						{
+							if (watchCopying.ElapsedMilliseconds > 10000 && watchTotal.ElapsedMilliseconds > 25000)
+								break;
+
+							if (!fi.Name.EndsWith(".jpg"))
+								continue;
+							// We try to store the images using the camera's local time zone so that
+							// the public categorization matches the file system categorization.
+							DateTime fileTimeStamp = GetImageTimestamp(cs, rxDateTime, fi);
+
+							string fileKey = Util.GetBundleKeyForTimestamp(fileTimeStamp);
+							string bundleFilePath = Util.GetBundleFilePathForTimestamp(cs, fileTimeStamp);
+
+							byte[] data = File.ReadAllBytes(fi.FullName);
+
+							filesToSave.Clear();
+							filesToSave.Add(fileKey, data);
+							FileBundle.FileBundleManager.SaveFiles(bundleFilePath, filesToSave);
+
+							// Delete the original file
+							fi.Delete();
+						}
+					}
+				}
+				finally
+				{
+					cs.MaintenanceLock.Release();
+				}
+			}
+
+			return true;
+		}
+
+		private static DateTime GetImageTimestamp(CameraSpec cs, Regex rxDateTime, FileInfo fi)
+		{
+			DateTime fileTimeStamp = DateTime.Now;
+			if (cs.timestampType == TimestampType.File_Created)
+			{
+				fileTimeStamp = Util.FromUTC(fi.CreationTimeUtc, cs.timezone);
+			}
+			else if (cs.timestampType == TimestampType.File_Modified)
+			{
+				fileTimeStamp = Util.FromUTC(fi.LastWriteTimeUtc, cs.timezone);
+			}
+			else if (cs.timestampType == TimestampType.DateTime_FromBinary)
+			{
+				string name = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
+				long binaryForm;
+				bool success = false;
+				if (long.TryParse(name, out binaryForm))
+				{
+					try
+					{
+						fileTimeStamp = DateTime.FromBinary(binaryForm); // We are honoring the sender's timestamp without modifying the time zone.
+						success = true;
+					}
+					catch (Exception ex)
+					{
+						Logger.Debug(ex);
+					}
+				}
+				if (!success)
+					fileTimeStamp = Util.FromUTC(fi.CreationTimeUtc, cs.timezone);
+			}
+			else if (cs.timestampType == TimestampType.Regular_Expression)
+			{
+				Match m = rxDateTime.Match(fi.Name);
+				if (m.Success)
+				{
+					fileTimeStamp = Util.FromUTC(fi.CreationTimeUtc, cs.timezone);
+
+					try
+					{
+						int year = cs.timestamp_regex_capture_year == -1 ? -1 : int.Parse(m.Groups[cs.timestamp_regex_capture_year].Value);
+						int month = cs.timestamp_regex_capture_month == -1 ? -1 : int.Parse(m.Groups[cs.timestamp_regex_capture_month].Value);
+						int day = cs.timestamp_regex_capture_day == -1 ? -1 : int.Parse(m.Groups[cs.timestamp_regex_capture_day].Value);
+						int hour = cs.timestamp_regex_capture_hour == -1 ? -1 : int.Parse(m.Groups[cs.timestamp_regex_capture_hour].Value);
+						int minute = cs.timestamp_regex_capture_minute == -1 ? -1 : int.Parse(m.Groups[cs.timestamp_regex_capture_minute].Value);
+						int second = cs.timestamp_regex_capture_second == -1 ? -1 : int.Parse(m.Groups[cs.timestamp_regex_capture_second].Value);
+
+						fileTimeStamp = new DateTime(year != -1 ? year : fileTimeStamp.Year,
+													month != -1 ? month : fileTimeStamp.Month,
+													day != -1 ? day : fileTimeStamp.Day,
+													hour != -1 ? hour : fileTimeStamp.Hour,
+													minute != -1 ? minute : fileTimeStamp.Minute,
+													second != -1 ? second : fileTimeStamp.Second,
+													DateTimeKind.Unspecified); // We are honoring the sender's timestamp without modifying the time zone.
+					}
+					catch (Exception ex)
+					{
+						Logger.Debug(ex);
+					}
+				}
+				else
+				{
+					Logger.Debug("Regular expression match failed for camera '" + cs.id + "' file named '" + fi.Name + "'.");
+					fileTimeStamp = Util.FromUTC(fi.CreationTimeUtc, cs.timezone);
+				}
+			}
+			else
+			{
+				Logger.Debug("Unknown timestamp type set for camera " + cs.id);
+				fileTimeStamp = Util.FromUTC(fi.CreationTimeUtc, cs.timezone);
+			}
+			return fileTimeStamp;
 		}
 
 		private void LogOutUser(HttpProcessor p, Session s)

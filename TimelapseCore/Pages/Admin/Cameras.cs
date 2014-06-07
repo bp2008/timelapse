@@ -14,7 +14,7 @@ namespace TimelapseCore.Pages.Admin
 			ItemTable<CameraSpec> tbl = new ItemTable<CameraSpec>("Cameras", "camera", "id", TimelapseWrapper.cfg.cameras, TimelapseWrapper.cfg, ItemTableMode.Add, new ItemTableColumnDefinition<CameraSpec>[]
 			{
 				//new ItemTableColumnDefinition<CameraSpec>(" ", c => { return "<a href=\"../image/" + c.id + ".cam\"><img src=\"../image/" + c.id + ".jpg?maxwidth=40&maxheight=40&nocache=" + DateTime.Now.ToBinary().ToString() + "\" alt=\"[img]\" /></a>"; }),
-				new ItemTableColumnDefinition<CameraSpec>("Link", c => { return "<a href=\"../../'" + c.id + "')\">Link</a>"; }),
+				new ItemTableColumnDefinition<CameraSpec>("Link", c => { return "<a href=\"../../" + c.id + "\">Link</a>"; }),
 				new ItemTableColumnDefinition<CameraSpec>("Name", c => { return "<a href=\"javascript:EditItem('" + c.id + "')\">" + HttpUtility.HtmlEncode(c.name) + "</a>"; }),
 				new ItemTableColumnDefinition<CameraSpec>("ID", c => { return c.id; }),
 				new ItemTableColumnDefinition<CameraSpec>("Enabled", c => { return c.enabled ? ("<span style=\"color:Green;\">Enabled</span>") : "<span style=\"color:Red;\">Disabled</span>"; }),
