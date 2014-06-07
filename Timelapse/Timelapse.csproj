@@ -65,6 +65,39 @@
     <Content Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
+    <Content Include="www\Camera.html" />
+    <Content Include="www\Images\ajax-loader.gif" />
+    <Content Include="www\Images\asc.gif" />
+    <Content Include="www\Images\bg.gif" />
+    <Content Include="www\Images\desc.gif" />
+    <Content Include="www\Scripts\Camera.js" />
+    <Content Include="www\Scripts\jquery-1.11.1.js" />
+    <Content Include="www\Scripts\jquery-1.11.1.min.js" />
+    <Content Include="www\Scripts\jquery-ui.min.js" />
+    <Content Include="www\Scripts\jquery.cookie.js" />
+    <Content Include="www\Scripts\jquery.mousewheel.js" />
+    <Content Include="www\Scripts\longclick.js" />
+    <Content Include="www\Scripts\sha1.js" />
+    <Content Include="www\Scripts\TableSorter.js" />
+    <Content Include="www\Styles\Camera.css" />
+    <Content Include="www\Styles\images\animated-overlay.gif" />
+    <Content Include="www\Styles\images\ui-bg_flat_0_aaaaaa_40x100.png" />
+    <Content Include="www\Styles\images\ui-bg_flat_75_ffffff_40x100.png" />
+    <Content Include="www\Styles\images\ui-bg_glass_55_fbf9ee_1x400.png" />
+    <Content Include="www\Styles\images\ui-bg_glass_65_ffffff_1x400.png" />
+    <Content Include="www\Styles\images\ui-bg_glass_75_dadada_1x400.png" />
+    <Content Include="www\Styles\images\ui-bg_glass_75_e6e6e6_1x400.png" />
+    <Content Include="www\Styles\images\ui-bg_glass_95_fef1ec_1x400.png" />
+    <Content Include="www\Styles\images\ui-bg_highlight-soft_75_cccccc_1x100.png" />
+    <Content Include="www\Styles\images\ui-icons_222222_256x240.png" />
+    <Content Include="www\Styles\images\ui-icons_2e83ff_256x240.png" />
+    <Content Include="www\Styles\images\ui-icons_454545_256x240.png" />
+    <Content Include="www\Styles\images\ui-icons_888888_256x240.png" />
+    <Content Include="www\Styles\images\ui-icons_cd0a0a_256x240.png" />
+    <Content Include="www\Styles\jquery-ui.css" />
+    <Content Include="www\Styles\Site.css" />
+    <Content Include="www\Styles\TableSorter_Blue.css" />
+    <Content Include="www\Styles\TableSorter_Green.css" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DummyHttpProcessor.cs" />
@@ -79,6 +112,9 @@
       <Project>{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}</Project>
       <Name>TimelapseCore</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="www\Scripts\jquery-1.11.1.min.map" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />
@@ -102,7 +138,8 @@
     </VisualStudio>
   </ProjectExtensions>
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(SolutionDir)TimelapseCore\www\*.*" "$(ProjectDir)www\*.*" /E /C /R /Y /I</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

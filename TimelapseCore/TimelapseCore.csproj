@@ -52,6 +52,11 @@
     <Compile Include="Configuration\ProxyConfig.cs" />
     <Compile Include="Configuration\SerializableObjectBase.cs" />
     <Compile Include="Configuration\User.cs" />
+    <Compile Include="FileBundle\BundleIndex.cs" />
+    <Compile Include="FileBundle\ByteConverter.cs" />
+    <Compile Include="FileBundle\FileBundle.cs" />
+    <Compile Include="FileBundle\FileBundleManager.cs" />
+    <Compile Include="FileSystemInfoComparer.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="Hash.cs" />
     <Compile Include="HttpServer\Crypto\CertProperties.cs" />
@@ -66,6 +71,9 @@
     <Compile Include="HttpServer\Mime.cs" />
     <Compile Include="HttpServer\SimpleHttpServer.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="Navigation.cs" />
+    <Compile Include="Pages\Camera\Camera.cs" />
+    <Compile Include="Pages\TimeZoneList.cs" />
     <Compile Include="TimelapseWrapper.cs" />
     <Compile Include="Pages\Admin\AdminBase.cs" />
     <Compile Include="Pages\Admin\Cameras.cs" />

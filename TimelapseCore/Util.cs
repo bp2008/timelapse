@@ -6,12 +6,21 @@ using System.Text;
 using System.Drawing;
 using System.Net;
 using System.Drawing.Imaging;
+using System.Collections.Concurrent;
+using TimelapseCore.Configuration;
 
 namespace TimelapseCore
 {
 	public static class Util
 	{
 		private static Random rand = new Random();
+		private static ConcurrentDictionary<string, TimeZoneInfo> timeZones;
+		static Util()
+		{
+			timeZones = new ConcurrentDictionary<string, TimeZoneInfo>();
+			foreach (TimeZoneInfo tzi in TimeZoneInfo.GetSystemTimeZones())
+				timeZones[tzi.Id] = tzi;
+		}
 		public static char GetRandomAlphaNumericChar()
 		{
 			int i;
@@ -39,6 +48,14 @@ namespace TimelapseCore
 		public static string ToCookieTime(this DateTime time)
 		{
 			return time.ToString("dd MMM yyyy hh:mm:ss GMT");
+		}
+		public static bool EnsureDirectoryExistsFromFilePath(string path)
+		{
+			FileInfo fi = new FileInfo(path);
+			if (fi.Directory.Exists)
+				return true;
+			else
+				return Directory.CreateDirectory(fi.Directory.FullName).Exists;
 		}
 		public static bool EnsureDirectoryExists(string path)
 		{
@@ -175,6 +192,85 @@ namespace TimelapseCore
 			if (int.TryParse(sb.ToString(), out outInt))
 				return outInt;
 			return defaultValue;
+		}
+		public static byte[] ReadNBytes(Stream s, int N)
+		{
+			byte[] buffer = new byte[N];
+			int read = 0;
+			int justRead = -1;
+			while (read < N && justRead != 0)
+			{
+				justRead = s.Read(buffer, read, N - read);
+				read += justRead;
+			}
+			return buffer;
+		}
+		/// <summary>
+		/// Returns the TimeZoneInfo that matches the specified ID.  If none matches, the defaultValue is returned.
+		/// </summary>
+		/// <param name="id">The ID string of the TimeZoneInfo you want.</param>
+		/// <param name="defaultValue">The value to return in case your TimeZoneInfo cannot be found.</param>
+		/// <returns></returns>
+		public static TimeZoneInfo GetTimeZoneInfo(string id, TimeZoneInfo defaultValue)
+		{
+			if (!string.IsNullOrEmpty(id))
+			{
+				TimeZoneInfo tzi;
+				if (timeZones.TryGetValue(id, out tzi))
+					return tzi;
+			}
+			return defaultValue;
+		}
+		public static DateTime ToUTC(DateTime dt, string timezoneid_ifunspecified)
+		{
+			if (dt.Kind == DateTimeKind.Local)
+				return dt.ToUniversalTime();
+			else if (dt.Kind == DateTimeKind.Unspecified)
+				return TimeZoneInfo.ConvertTimeToUtc(dt, Util.GetTimeZoneInfo(timezoneid_ifunspecified, TimeZoneInfo.Local));
+			else
+				return dt;
+		}
+		public static DateTime FromUTC(DateTime dt, string timezoneid_target)
+		{
+			if (dt.Kind == DateTimeKind.Local)
+				return dt;
+			else
+				return TimeZoneInfo.ConvertTimeFromUtc(dt, Util.GetTimeZoneInfo(timezoneid_target, TimeZoneInfo.Local));
+		}
+
+		internal static string GetBundleKeyForTimestamp(DateTime t)
+		{
+			return t.Year.ToString().PadLeft(4, '0')
+				+ t.Month.ToString().PadLeft(2, '0')
+				+ t.Day.ToString().PadLeft(2, '0')
+				+ t.Hour.ToString().PadLeft(2, '0')
+				+ t.Minute.ToString().PadLeft(2, '0')
+				+ t.Second.ToString().PadLeft(2, '0');
+		}
+
+		internal static string GetBundleFilePathForTimestamp(CameraSpec cs, DateTime t)
+		{
+			return Globals.ImageArchiveDirectoryBase + cs.id + "/" + t.Year.ToString().PadLeft(4, '0') + "/" + t.Month.ToString().PadLeft(2, '0') + "/" + t.Day.ToString().PadLeft(2, '0') + ".bdl";
+		}
+
+		internal static DateTime GetTimestampFromBundleKey(string fileName)
+		{
+			int year, month, day, hour, minute, second;
+			if (fileName.Length == 14
+				&& int.TryParse(fileName.Substring(0, 4), out year)
+				&& int.TryParse(fileName.Substring(4, 2), out month)
+				&& int.TryParse(fileName.Substring(6, 2), out day)
+				&& int.TryParse(fileName.Substring(8, 2), out hour)
+				&& int.TryParse(fileName.Substring(10, 2), out minute)
+				&& int.TryParse(fileName.Substring(12, 2), out second))
+				return new DateTime(year, month, day, hour, minute, second);
+			else
+				return DateTime.MinValue;
+
+		}
+		internal static string GetDisplayableTime(DateTime t, bool includeSeconds)
+		{
+			return t.ToString("T");
 		}
 	}
 }

@@ -20,7 +20,7 @@ namespace Timelapse
 			request_url = context.Request.Url;
 			httpHeaders = new Dictionary<string, string>();
 			foreach (string key in context.Request.Headers.Keys)
-				httpHeaders[key] = context.Request.Headers[key];
+				httpHeaders[key.ToLower()] = context.Request.Headers[key];
 
 			RawPostParams = new SortedList<string, string>();
 			PostParams = new SortedList<string, string>();
@@ -28,16 +28,16 @@ namespace Timelapse
 			{
 				string value = context.Request.Form[key];
 
-				string keyLower = key.ToLower();
-				if (RawPostParams.ContainsKey(keyLower))
-					RawPostParams[keyLower] += "," + value;
+				if (RawPostParams.ContainsKey(key))
+					RawPostParams[key] += "," + value;
 				else
-					RawPostParams[keyLower] = value;
+					RawPostParams[key] = value;
 
-				if (PostParams.ContainsKey(key))
-					PostParams[key] += "," + value;
+				string keyLower = key.ToLower();
+				if (PostParams.ContainsKey(keyLower))
+					PostParams[keyLower] += "," + value;
 				else
-					PostParams[key] = value;
+					PostParams[keyLower] = value;
 			}
 
 			RawQueryString = ParseQueryStringArguments(this.request_url.Query, preserveKeyCharacterCase: true);
