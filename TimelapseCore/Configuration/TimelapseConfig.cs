@@ -6,7 +6,7 @@ using System.IO;
 
 namespace TimelapseCore.Configuration
 {
-	public class ProxyConfig : SerializableObjectBase
+	public class TimelapseConfig : SerializableObjectBase
 	{
 		public int webSocketPort = 44454;
 		public int webSocketPort_secure = -1;
@@ -15,6 +15,7 @@ namespace TimelapseCore.Configuration
 
 		public List<User> users = new List<User>();
 		public List<CameraSpec> cameras = new List<CameraSpec>();
+		public TimelapseGlobalOptions options = new TimelapseGlobalOptions();
 
 		public string SaveItem(SimpleHttp.HttpProcessor p)
 		{
@@ -47,14 +48,13 @@ namespace TimelapseCore.Configuration
 							{
 								cs.order = cameras[i].order;
 								foundCamera = true;
-							//	MJpegServer.cm.KillCamera(originalId);
 								cameras[i] = cs;
 								break;
 							}
 						if (!foundCamera)
 							cameras.Add(cs);
 					}
-					//MJpegServer.cm.CleanUpCameraOrder();
+					CleanUpCameraOrder();
 					Save(Globals.ConfigFilePath);
 				}
 				return result;
@@ -93,6 +93,19 @@ namespace TimelapseCore.Configuration
 				}
 				return result;
 			}
+			else if (itemtype == "globaloptions")
+			{
+				Configuration.TimelapseGlobalOptions o = new TimelapseGlobalOptions();
+				string result = o.setFieldValues(p.RawPostParams);
+				if (result.StartsWith("0"))
+					return result;
+				lock (this)
+				{
+					this.options = o;
+					Save(Globals.ConfigFilePath);
+				}
+				return result;
+			}
 			return "0Invalid item type: " + itemtype;
 		}
 
@@ -119,6 +132,7 @@ namespace TimelapseCore.Configuration
 
 		public CameraSpec GetCameraSpec(string id)
 		{
+			id = id.ToLower();
 			lock (this)
 			{
 				foreach (CameraSpec spec in cameras)
@@ -154,11 +168,9 @@ namespace TimelapseCore.Configuration
 					cameras.RemoveAll(cs =>
 					{
 						bool remove = hsParts.Contains(cs.id);
-					//	if (remove)
-					//		MJpegServer.cm.KillCamera(cs.id);
 						return remove;
 					});
-				//	MJpegServer.cm.CleanUpCameraOrder();
+					CleanUpCameraOrder();
 					Save(Globals.ConfigFilePath);
 				}
 			}
@@ -223,6 +235,22 @@ namespace TimelapseCore.Configuration
 
 				Save(Globals.ConfigFilePath);
 				return "1";
+			}
+		}
+
+		private void CleanUpCameraOrder()
+		{
+			lock (this)
+			{
+				cameras.Sort(new ComparisonComparer<CameraSpec>((c1, c2) =>
+				{
+					int diff = c1.order.CompareTo(c2.order);
+					if (diff == 0)
+						diff = c1.id.CompareTo(c2.id);
+					return diff;
+				}));
+				for (int i = 0; i < cameras.Count; i++)
+					cameras[i].order = i;
 			}
 		}
 	}

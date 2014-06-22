@@ -65,6 +65,7 @@
     <Content Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
+    <Content Include="www\All.html" />
     <Content Include="www\Camera.html" />
     <Content Include="www\Images\ajax-loader.gif" />
     <Content Include="www\Images\asc.gif" />

@@ -133,4 +133,18 @@ namespace TimelapseCore.Configuration
 			this.acceptableValues = acceptableValues;
 		}
 	}
+	public class EditorUseTextArea : Attribute
+	{
+		public readonly string widthCss;
+		public readonly string heightInTextLines;
+		public EditorUseTextArea(string widthCss, string heightInTextLines)
+		{
+			this.widthCss = widthCss;
+			this.heightInTextLines = heightInTextLines;
+		}
+		public override string ToString()
+		{
+			return "style=\"width:" + widthCss + "\" rows=\"" + heightInTextLines + "\"";
+		}
+	}
 }

@@ -22,21 +22,37 @@ namespace TimelapseCore.Configuration
 		public string id = "";
 		[EditorName("Camera Type")]
 		public CameraType type = CameraType.FTP;
-		[EditorName("Timestamp Type")]
-		[EditorHint("<br/>* File_Created: The image timestamp will be derived from the file's Creation date on the local filesystem."
-			 + "<br/>* File_Modified: The image timestamp will be derived from the file's Last Modified date on the local filesystem."
-			 + "<br/>* Regular_Expression: Use this if you understand \"regular expressions\" well, and you want to preserve the timestamp that was written into the image file name."
-			 + "<br/>* DateTime_FromBinary: (Special Case) Use this if the uploaded files were named via: DateTime.ToBinary() + \".jpg\"")]
-		public TimestampType timestampType = TimestampType.File_Created;
-		[EditorName("Time Zone ID")]
-		[EditorHint("<br/>* Note: This affects new images only.<br/>Modify this field if the server is using the wrong time zone for the image archive links.<br/>CaSe SeNsiTive!<br/><a href=\"../TimeZoneList\" target=\"_blank\">Click here</a> to open (in a new window) a list of Time Zone IDs that you can copy from.")]
-		public string timezone = TimeZoneInfo.Local.Id;
 
 		[EditorCategory("FTP Settings")]
 		[EditorCondition_FieldMustBe("type", CameraType.FTP)]
 		[EditorName("Image dump root directory")]
 		[EditorHint("<br/>The relative path from the root of the application to the directory where new images from the camera will appear.  You are responsible for setting up your own FTP server to ensure images are sent here.")]
 		public string path_imgdump = "SetMe";
+		[EditorName("Timestamp Type")]
+		[EditorHint("<br/>* File_Created: The image timestamp will be derived from the file's Creation date on the local filesystem."
+			 + "<br/>* File_Modified: The image timestamp will be derived from the file's Last Modified date on the local filesystem."
+			 + "<br/>* Regular_Expression: Use this if you understand \"regular expressions\" well, and you want to preserve the timestamp that was written into the image file name."
+			 + "<br/>* DateTime_FromBinary: (Special Case) Use this if the uploaded files were named via: DateTime.ToBinary() + \".jpg\""
+			 + "<br/>* DateTime_FromBinary_With_Temp_F: (Special Case) Use this if the uploaded files were named via: DateTime.ToBinary() + \" \" + temperatureF + \".jpg\"")]
+		public TimestampType timestampType = TimestampType.File_Created;
+		[EditorName("Time Zone ID")]
+		[EditorHint("<br/>* Note: This affects new images only.<br/>Modify this field if the server is using the wrong time zone for the image archive links.<br/>CaSe SeNsiTive!<br/><a href=\"../TimeZoneList\" target=\"_blank\">Click here</a> to open (in a new window) a list of Time Zone IDs that you can copy from.")]
+		public string timezone = TimeZoneInfo.Local.Id;
+
+		[EditorCategory("Third Party Hosted Settings")]
+		[EditorCondition_FieldMustBe("type", CameraType.ThirdPartyHosted)]
+		[EditorName("Image path")]
+		[EditorHint("<br/>The absolute URL to the live/updating image on a 3rd party server.  The image will not be stored on this server, and therefore the primary purpose of the Third Party Hosted camera type is to allow 3rd party cameras to be added to the <a href=\"../all\">all</a> page.<br/><br/>If you include the text <b>%TIME%</b> it will be replaced by a value derived from the current system time where appropriate to prevent caching of the image.")]
+		public string path_3rdpartyimg = "/Images/ajax-loader.gif?%TIME%";
+		[EditorName("Camera Name Link")]
+		[EditorHint("<br/>The URL to load if the camera name is clicked on the all page.")]
+		public string path_3rdpartynamelink = "";
+		[EditorName("Camera Image Link")]
+		[EditorHint("<br/>The URL to load if the camera image is clicked on the all page.")]
+		public string path_3rdpartyimglink = "";
+		[EditorName("Zipped full-resolution jpeg remote URL")]
+		[EditorHint("<br/>This field exists to handle a special case in which the full resolution version of an image is stored as a *.jpg file inside a zip file on the 3rd party server.  If you specify a url here, this server will try to request and unzip the image and send it to you when you load the url '/ID/latest.jpg'.")]
+		public string path_3rdpartyimgzippedURL = "";
 
 		[EditorCategory("Regular Expression Timestamp Type Settings")]
 		[EditorCondition_FieldMustBe("timestampType", TimestampType.Regular_Expression)]
@@ -61,6 +77,50 @@ namespace TimelapseCore.Configuration
 		[EditorName("Capture Group: Second")]
 		[EditorHint("The number of the capture group that contains the second.")]
 		public int timestamp_regex_capture_second = 6;
+
+		[EditorCategory("Page Customization (all fields optional)")]
+		[EditorCondition_FieldMustBe("type", CameraType.FTP)]
+		[EditorName("Camera Name Text Color")]
+		[EditorHint("<br/>A css color string (e.g. 'Red' or '#FF0000')")]
+		public string cameraNameColor = "#999999";
+		[EditorName("Camera Name Background Color")]
+		public string cameraNameBackgroundColor = "rgba(0,0,0,0.5)";
+		[EditorName("Camera Name Font Size")]
+		[EditorHint(" (in points)")]
+		public int cameraNameFontSizePts = 20;
+		[EditorName("Navigation Menu Font Size")]
+		[EditorHint(" (in points)")]
+		public int cameraNavigationFontSizePts = 16;
+		[EditorName("Camera Name Image Link")]
+		[EditorHint("<br/>A relative or absolute URL pointing at the image to use as the logo for this camera.  Replaces the camera name.")]
+		public string cameraNameImageUrl = "";
+		[EditorName("Top Bar HTML")]
+		[EditorHint("<br/>Html content to appear above the image frame, to the right of the image timestamp.")]
+		public string topMenuHtml = "";
+		[EditorName("Image frame gradient")]
+		[EditorHint("Apply a dark gradient background to the image frame.")]
+		public bool imgBackgroundGradient = true;
+		[EditorName("Background Image Link")]
+		[EditorHint("<br/>A relative or absolute URL pointing at the image to use as the background for this camera's main page. Aligned to the top left.")]
+		public string backgroundImageUrl = "";
+		[EditorName("CSS Body Background Color")]
+		public string backgroundColor = "#333333";
+		[EditorName("CSS Text Color")]
+		public string textColor = "#BBBBBB";
+		[EditorName("CSS Text Background Color")]
+		public string textBackgroundColor = "rgba(0,0,0,0.5)";
+		[EditorName("CSS Link Color")]
+		public string linkColor = "#2288DD";
+		[EditorName("CSS Link Background Color")]
+		public string linkBackgroundColor = "rgba(0,0,0,0.5)";
+
+		[EditorCategory("Page Linking Options")]
+		[EditorName("Show on \"All\" page")]
+		[EditorHint("If checked, the camera will be shown on the <a href=\"../all\">all</a> page.")]
+		public bool showOnAllPage = true;
+		[EditorName("\"All\" page overlay message")]
+		[EditorHint("<br/>A message that will be overlayed on the camera image on the <a href=\"../all\">all</a> page.  You might enter \"Offline\" here if the camera is no longer sending new imagery.")]
+		public string allPageOverlayMessage = "";
 
 		public int order = -1;
 
@@ -88,7 +148,7 @@ namespace TimelapseCore.Configuration
 			{
 				try
 				{
-					if (string.IsNullOrEmpty(path_imgdump))
+					if (string.IsNullOrWhiteSpace(path_imgdump))
 						return "0You must provide an Image dump root directory when using the FTP camera type.";
 					string full_path_imgdump = Globals.ApplicationDirectoryBase + path_imgdump;
 					FileInfo fi = new FileInfo(full_path_imgdump);
@@ -96,6 +156,19 @@ namespace TimelapseCore.Configuration
 				catch (Exception)
 				{
 					return "0Invalid Image dump root directory.";
+				}
+			}
+			else if (type == CameraType.ThirdPartyHosted)
+			{
+				try
+				{
+					if (string.IsNullOrWhiteSpace(path_3rdpartyimg))
+						return "0You must provide a URL for the 3rd party camera image.";
+					Uri uri = new Uri(path_3rdpartyimg);
+				}
+				catch (Exception)
+				{
+					return "0Invalid URL for the 3rd party camera image.";
 				}
 			}
 			if (timestampType == TimestampType.Regular_Expression)
@@ -149,20 +222,15 @@ namespace TimelapseCore.Configuration
 
 	public enum CameraType
 	{
-		FTP
+		FTP,
+		ThirdPartyHosted
 	}
 	public enum TimestampType
 	{
 		File_Created,
 		File_Modified,
 		Regular_Expression,
-		DateTime_FromBinary
-	}
-	public enum PtzType
-	{
-		None, LoftekCheap, Dahua,
-		WanscamCheap, TrendnetIP672,
-		IPS_EYE01, TrendnetTVIP400,
-		CustomPTZProfile, Dev
+		DateTime_FromBinary,
+		DateTime_FromBinary_With_Temp_F
 	}
 }

@@ -35,7 +35,6 @@ namespace TimelapseCore.Pages.Admin
 				}
 				if (!foundCamera)
 					sb.Append("Could not find camera");
-				return sb.ToString();
 			}
 			else if (itemtype == "user")
 			{
@@ -53,7 +52,14 @@ namespace TimelapseCore.Pages.Admin
 				}
 				if (!foundUser)
 					sb.Append("Could not find user");
-				return sb.ToString();
+			}
+			else if (itemtype == "globaloptions")
+			{
+				sb.AppendLine("<div style=\"display:none;\" id=\"pageToLoadWhenFinished\" page=\"main\"></div>");
+				lock (TimelapseWrapper.cfg)
+				{
+					CreateItemEditor(TimelapseWrapper.cfg.options);
+				}
 			}
 			else
 			{
@@ -105,7 +111,13 @@ namespace TimelapseCore.Pages.Admin
 						if (GetAttributeValue(fi, typeof(Configuration.IsPasswordField)) == "1")
 							inputtype = "password";
 
-						SectionTableEntry(sb, displayName, "<input style=\"width:95%\" type=\"" + inputtype + "\" fieldname=\"" + fi.Name + "\" value=\"" + HttpUtility.HtmlAttributeEncode(ToString(fi.GetValue(obj))) + "\" />" + hint);
+						string textAreaStyle = GetAttributeValue(fi, typeof(Configuration.EditorUseTextArea));
+						if (!string.IsNullOrEmpty(textAreaStyle))
+						{
+							SectionTableEntry(sb, displayName, "<textarea " + textAreaStyle + " fieldname=\"" + fi.Name + "\">" + HttpUtility.HtmlEncode(ToString(fi.GetValue(obj))) + "</textarea>" + hint);
+						}
+						else
+							SectionTableEntry(sb, displayName, "<input style=\"width:95%\" type=\"" + inputtype + "\" fieldname=\"" + fi.Name + "\" value=\"" + HttpUtility.HtmlAttributeEncode(ToString(fi.GetValue(obj))) + "\" />" + hint);
 					}
 					else if (fi.FieldType == typeof(int))
 						SectionTableEntry(sb, displayName, "<input style=\"width:100px\" type=\"number\" fieldname=\"" + fi.Name + "\" value=\"" + ToString(fi.GetValue(obj)) + "\" />" + hint);
@@ -168,15 +180,13 @@ namespace TimelapseCore.Pages.Admin
 		$('#saveBtn, #cancelBtn').unbind('click');
 		$('#saveBtn').val('Saving...');
 		var fields = $('#itemfields');
-		var inputs = fields.find('input, select');
+		var inputs = fields.find('input, select, textarea');
 		var parameters = new Object();
 		inputs.each(function(idx, ele)
 		{
 			var thisInput = $(ele);
 			if(thisInput.is(':checkbox'))
-			{
 				parameters[thisInput.attr('fieldname')] = thisInput.is(':checked') ? '1' : '0';
-			}
 			else
 				parameters[thisInput.attr('fieldname')] = thisInput.val();
 		});

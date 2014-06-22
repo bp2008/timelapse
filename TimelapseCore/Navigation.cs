@@ -22,13 +22,15 @@ namespace TimelapseCore
 			{
 				if (diArg.Parent.Name.ToLower() != "imgarchive")
 				{
+					sb.Append("<div id=\"navheader\">");
 					sb.Append("<a class=\"linkup\" href=\"");
 					sb.Append("javascript:Navigate('");
 					sb.Append(HttpUtility.JavaScriptStringEncode(GetLinkPath(diArg.Parent)));
 					sb.Append("')\">UP</a>&nbsp; ");
-					sb.Append("<span class=\"directorypath\">");
+					sb.Append("<span class=\"directorypath bgcolored\">");
 					sb.Append(HttpUtility.JavaScriptStringEncode(GetLinkPath(diArg)));
 					sb.Append("</span>");
+					sb.Append("</div>");
 				}
 
 				List<string> links = new List<string>();
@@ -68,15 +70,20 @@ namespace TimelapseCore
 					List<string> fileNames = FileBundle.FileBundleManager.GetFileList(fiBdl.FullName);
 					fileNames.Sort();
 					fileNames.Reverse();
-					for(int i = 0; i < fileNames.Count; i++)
+					for (int i = 0; i < fileNames.Count; i++)
 					{
-						DateTime time = Util.GetTimestampFromBundleKey(fileNames[i]);
+						string tempF, latestImgTime;
+						DateTime time = Util.GetTimestampFromBundleKey(fileNames[i], out tempF);
+						if (string.IsNullOrEmpty(tempF))
+							latestImgTime = Util.GetDisplayableTime(time, true);
+						else
+							latestImgTime = Util.GetDisplayableTime(time, false) + " " + Util.Colorize(tempF);
 						string fullPath = pathRoot + HttpUtility.JavaScriptStringEncode(fileNames[i]) + ".jpg";
-						links.Add("<a id=\"imglnk" + i + "\" href=\"" + fullPath + "\" onclick=\"Img(" + i + ", '" + fullPath + "'); return false;\">" + Util.GetDisplayableTime(time, true) + "</a>");
+						links.Add("<a id=\"imglnk" + i + "\" href=\"" + fullPath + "\" onclick=\"Img(" + i + ", '" + fullPath + "'); return false;\">" + latestImgTime + "</a>");
 					}
 				}
 
-				sb.Append("<div class=\"navlinks\">");
+				sb.Append("<div id=\"navlinks\">");
 				sb.Append(string.Join("<br/>", links));
 				sb.Append("</div>");
 			}
@@ -103,18 +110,21 @@ namespace TimelapseCore
 			}
 			return sb.ToString();
 		}
-		public static string GetLatestPath(CameraSpec cs)
+		public static string GetLatestPath(CameraSpec cs, out string latestImgTime)
 		{
-			return GetLatestPath(Globals.ImageArchiveDirectoryBase + cs.id, false);
+			return GetLatestPath(Globals.ImageArchiveDirectoryBase + cs.id, false, out latestImgTime);
 		}
-		private static string GetLatestPath(string path, bool imgPath)
+		private static string GetLatestPath(string path, bool imgPath, out string latestImgTime)
 		{
 			DirectoryInfo di = new DirectoryInfo(path);
 			if (!di.Exists)
+			{
+				latestImgTime = "";
 				return GetLinkPath(di);
-			return GetLatestPath(di, imgPath);
+			}
+			return GetLatestPath(di, imgPath, out latestImgTime);
 		}
-		private static string GetLatestPath(DirectoryInfo di, bool imgPath)
+		private static string GetLatestPath(DirectoryInfo di, bool imgPath, out string latestImgTime)
 		{
 			DirectoryInfo[] dis = di.GetDirectories("*", SearchOption.TopDirectoryOnly);
 			if (dis != null && dis.Length > 0)
@@ -122,7 +132,7 @@ namespace TimelapseCore
 				Array.Sort(dis, new FileSystemInfoComparer());
 				// Get the first directory in the list. This is alphabetically the last one.
 				DirectoryInfo diLatest = dis[0];
-				return GetLatestPath(diLatest, imgPath);
+				return GetLatestPath(diLatest, imgPath, out latestImgTime);
 			}
 			else
 			{
@@ -133,6 +143,7 @@ namespace TimelapseCore
 					// Get the first bundle file in the list. This is alphabetically the last one.
 					FileInfo fiLatest = fis[0];
 					string dirPath = GetLinkPath(new DirectoryInfo(fiLatest.FullName.Remove(fiLatest.FullName.Length - fiLatest.Extension.Length)));
+					latestImgTime = "";
 					if (!imgPath)
 						return dirPath;
 					else
@@ -142,16 +153,25 @@ namespace TimelapseCore
 						if (fileNames.Count == 0)
 							return "Empty Bundle";
 						else
+						{
+							string tempF;
+							DateTime imgTimeStamp = Util.GetTimestampFromBundleKey(fileNames[fileNames.Count - 1], out tempF);
+							if (string.IsNullOrEmpty(tempF))
+								latestImgTime = Util.GetDisplayableTime(imgTimeStamp, true);
+							else
+								latestImgTime = Util.GetDisplayableTime(imgTimeStamp, false) + " " + Util.Colorize(tempF);
 							return dirPath + fileNames[fileNames.Count - 1];
+						}
 					}
 				}
 			}
+			latestImgTime = "";
 			return GetLinkPath(di);
 		}
 
-		public static string GetLatestImagePath(CameraSpec cs)
+		public static string GetLatestImagePath(CameraSpec cs, out string latestImgTime)
 		{
-			return GetLatestPath(Globals.ImageArchiveDirectoryBase + cs.id, true);
+			return GetLatestPath(Globals.ImageArchiveDirectoryBase + cs.id, true, out latestImgTime);
 		}
 	}
 }
