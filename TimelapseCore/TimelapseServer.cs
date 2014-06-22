@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Web;
 using System.Net.Sockets;
 using TimelapseCore.Configuration;
+using System.Net;
 
 namespace TimelapseCore
 {
@@ -26,12 +27,6 @@ namespace TimelapseCore
 			{
 				string requestedPage = Uri.UnescapeDataString(p.request_url.AbsolutePath.TrimStart('/'));
 				string requestedPageLower = requestedPage.ToLower();
-
-				if (requestedPage == "")
-				{
-					p.writeRedirect("admin/main");
-					return;
-				}
 
 				if (requestedPage == "admin")
 				{
@@ -70,8 +65,10 @@ namespace TimelapseCore
 				}
 				else if (requestedPage == "Navigation")
 				{
+					if (HandlePublicServiceDisabled(p))
+						return;
 					CameraSpec cs = TimelapseWrapper.cfg.GetCameraSpec(p.GetParam("cam"));
-					if (cs == null)
+					if (cs == null || cs.type != CameraType.FTP)
 						p.writeFailure("400 Bad Request");
 					else
 					{
@@ -82,6 +79,8 @@ namespace TimelapseCore
 				}
 				else if (requestedPage == "TimeZoneList")
 				{
+					if (HandlePublicServiceDisabled(p))
+						return;
 					p.writeSuccess();
 					p.outputStream.Write(Pages.TimeZoneList.GetHtml());
 				}
@@ -96,36 +95,64 @@ namespace TimelapseCore
 						cs = TimelapseWrapper.cfg.GetCameraSpec(p.request_url.Segments[1].Trim('/'));
 					if (cs != null)
 					{
+						if (HandlePublicServiceDisabled(p))
+							return;
+
 						// This page is something involving a camera we have configured
 						if (p.request_url.Segments.Length == 2)
 						{
-							// Return the camera page for this camera
-							p.writeRedirect("Camera.html?cam=" + cs.id);
+							if (cs.type == CameraType.ThirdPartyHosted)
+								p.writeFailure("400 Bad Request");
+							else
+								p.writeRedirect("Camera.html?cam=" + cs.id); // Redirect to the camera page for this camera
 						}
 						else if (p.request_url.Segments.Length >= 3)
 						{
 							if (p.request_url.Segments.Length == 3 && p.request_url.Segments[2] == "latest.jpg")
 							{
-								string path = cs.id + "/" + Navigation.GetLatestImagePath(cs);
+								if (cs.type == CameraType.ThirdPartyHosted)
+								{
+									if (!string.IsNullOrWhiteSpace(cs.path_3rdpartyimgzippedURL))
+									{
+										Handle3rdPartyZippedImage(p, cs);
+										return;
+									}
+									else
+									{
+										p.writeFailure("400 Bad Request");
+										return;
+									}
+								}
+								string latestImgTime;
+								string path = cs.id + "/" + Navigation.GetLatestImagePath(cs, out latestImgTime);
 								if (path == p.GetHeaderValue("if-none-match"))
 								{
 									p.writeSuccess("image/jpeg", -1, "304 Not Modified");
 									return;
 								}
 								byte[] data = GetImageData(path);
-								p.writeSuccess("image/jpeg", data.Length, additionalHeaders: GetCacheEtagHeaders(TimeSpan.Zero, path));
+								List<KeyValuePair<string, string>> headers = GetCacheEtagHeaders(TimeSpan.Zero, path);
+								headers.Add(new KeyValuePair<string, string>("ImgTime", latestImgTime));
+								p.writeSuccess("image/jpeg", data.Length, additionalHeaders: headers);
 								p.outputStream.Flush();
 								p.rawOutputStream.Write(data, 0, data.Length);
 							}
 							else
 							{
+								if (cs.type != CameraType.FTP)
+								{
+									p.writeFailure("400 Bad Request");
+									return;
+								}
 								if (requestedPage == p.GetHeaderValue("if-none-match"))
 								{
 									p.writeSuccess("image/jpeg", -1, "304 Not Modified");
 									return;
 								}
 								byte[] data = GetImageData(requestedPage);
-								p.writeSuccess("image/jpeg", data.Length, additionalHeaders: GetCacheEtagHeaders(TimeSpan.FromDays(365), requestedPage));
+								List<KeyValuePair<string, string>> headers = GetCacheEtagHeaders(TimeSpan.FromDays(365), requestedPage);
+								headers.Add(new KeyValuePair<string, string>("ImgTime", "!")); // TODO: Implement this to put in the real time stamp.
+								p.writeSuccess("image/jpeg", data.Length, additionalHeaders: headers);
 								p.outputStream.Flush();
 								p.rawOutputStream.Write(data, 0, data.Length);
 							}
@@ -142,11 +169,15 @@ namespace TimelapseCore
 						string targetFilePath = fi.FullName.Replace('\\', '/');
 						if (!targetFilePath.StartsWith(wwwDirectoryBase) || targetFilePath.Contains("../"))
 						{
+							if (HandleAdminConfiguredRedirect(p))
+								return;
 							p.writeFailure("400 Bad Request");
 							return;
 						}
 						if (!fi.Exists)
 						{
+							if (HandleAdminConfiguredRedirect(p))
+								return;
 							// This should be just a 404 error, but that causes ASP.NET to try to handle the request with another handler.  Like the static file handler.  Which we don't want.
 							p.writeFailure("400 Bad Request");
 							return;
@@ -158,22 +189,40 @@ namespace TimelapseCore
 							if (fi.Name.ToLower() == "camera.html")
 							{
 								// camera.html triggers special behavior
+
+								if (HandlePublicServiceDisabled(p))
+									return;
+
 								string camId = p.GetParam("cam");
 								cs = TimelapseWrapper.cfg.GetCameraSpec(camId);
-								if (cs == null || !MaintainCamera(cs))
+
+								if (cs == null || cs.type == CameraType.ThirdPartyHosted || !MaintainCamera(cs))
 								{
 									p.writeFailure("400 Bad Request");
 									return;
 								}
-								html = html.Replace("%NAVMENU%", Navigation.GetNavHtml(cs, Navigation.GetLatestPath(cs)));
+								string latestImgTime;
+								html = html.Replace("%NAVMENU%", Navigation.GetNavHtml(cs, Navigation.GetLatestPath(cs, out latestImgTime)));
+								html = html.Replace("%TOPMENU%", cs.topMenuHtml);
 								html = html.Replace("%CAMID%", cs.id);
 								html = html.Replace("%CAMNAME%", cs.name);
-								string latestImagePath = cs.id + "/" + Navigation.GetLatestImagePath(cs) + ".jpg";
+								html = html.Replace("%CSS%", GetCameraPageStyleCSS(cs));
+								html = html.Replace("%CAMFRAME_GRADIENT%", cs.imgBackgroundGradient ? "true" : "false");
+								html = html.Replace("%CAMNAME_HTML%", GetCameraNameHtml(cs));
+								string latestImagePath = cs.id + "/" + Navigation.GetLatestImagePath(cs, out latestImgTime) + ".jpg";
 								html = html.Replace("%LATEST_IMAGE%", latestImagePath);
+								html = html.Replace("%LATEST_IMAGE_TIME%", HttpUtility.JavaScriptStringEncode(latestImgTime));
+							}
+							else if (fi.Name.ToLower() == "all.html")
+							{
+								// all.html triggers special macro strings
+								html = html.Replace("%ALL_CAMERAS_JS_ARRAY%", GetAllCamerasJavascriptArray());
+								html = html.Replace("%ALL_PAGE_HEADER%", TimelapseWrapper.cfg.options.allPageHeading);
 							}
 							try
 							{
 								html = html.Replace("%REMOTEIP%", p.RemoteIPAddress);
+								html = html.Replace("%SYSTEM_NAME%", TimelapseWrapper.cfg.options.systemName);
 							}
 							catch (Exception ex)
 							{
@@ -207,6 +256,155 @@ namespace TimelapseCore
 				if (!p.isOrdinaryDisconnectException(ex))
 					Logger.Debug(ex);
 			}
+		}
+
+		private string GetAllCamerasJavascriptArray()
+		{
+			List<string> camerasList = new List<string>();
+			foreach (CameraSpec cs in TimelapseWrapper.cfg.cameras)
+			{
+				if (cs.showOnAllPage)
+				{
+					string imgsrc = "", imglink = "", namelink = "";
+					if (cs.type == CameraType.ThirdPartyHosted)
+					{
+						imgsrc = cs.path_3rdpartyimg;
+						imglink = cs.path_3rdpartyimglink;
+						namelink = cs.path_3rdpartynamelink;
+					}
+					else
+					{
+						imgsrc = cs.id + "/latest.jpg";
+						imglink = namelink = "Camera.html?cam=" + cs.id;
+					}
+					camerasList.Add("['" + HttpUtility.JavaScriptStringEncode(cs.id) + "', '" + HttpUtility.JavaScriptStringEncode(cs.name) + "', '" + HttpUtility.JavaScriptStringEncode(imgsrc) + "', '" + HttpUtility.JavaScriptStringEncode(imglink) + "', '" + HttpUtility.JavaScriptStringEncode(namelink) + "', '" + HttpUtility.JavaScriptStringEncode(cs.allPageOverlayMessage) + "']");
+				}
+			}
+			return "[" + string.Join(",", camerasList) + "]";
+		}
+
+		private void Handle3rdPartyZippedImage(HttpProcessor p, CameraSpec cs)
+		{
+			WebClient wc = new WebClient();
+			byte[] zipData = wc.DownloadData(cs.path_3rdpartyimgzippedURL);
+			using (MemoryStream msZip = new MemoryStream(zipData))
+			{
+				Ionic.Zip.ZipFile zFile = Ionic.Zip.ZipFile.Read(msZip);
+				foreach (Ionic.Zip.ZipEntry entry in zFile.Entries)
+				{
+					if (entry.FileName.EndsWith(".jpg"))
+					{
+						using (MemoryStream msJpg = new MemoryStream())
+						{
+							entry.Extract(msJpg); 
+							byte[] jpegData = msJpg.ToArray();
+							List<KeyValuePair<string, string>> headers = new List<KeyValuePair<string, string>>();
+							headers.Add(new KeyValuePair<string, string>("Content-Disposition", "inline; filename=\"" + cs.name + " " + entry.LastModified.ToString("yyyy-MM-dd HH-mm-ss") + ".jpg\""));
+							p.writeSuccess("image/jpeg", jpegData.Length, additionalHeaders: headers);
+							p.outputStream.Flush();
+							p.rawOutputStream.Write(jpegData, 0, jpegData.Length);
+							p.rawOutputStream.Flush();
+						}
+					}
+				}
+			}
+		}
+
+		public static SortedList<string, string> staticUrlRedirections = new SortedList<string, string>();
+		private static string lastUrlRedirectionList = "";
+		private bool HandleAdminConfiguredRedirect(HttpProcessor p)
+		{
+			SortedList<string, string> urlRedirections;
+			if (lastUrlRedirectionList == TimelapseWrapper.cfg.options.UrlRedirectList)
+				urlRedirections = staticUrlRedirections;
+			else
+			{
+				string currentRedirectList = TimelapseWrapper.cfg.options.UrlRedirectList;
+				string[] rules = currentRedirectList.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+				urlRedirections = new SortedList<string, string>(rules.Length);
+				foreach (string urlRedirectionRule in rules)
+				{
+					string[] urls = urlRedirectionRule.Split(' ');
+					if (urls.Length == 2)
+						urlRedirections[urls[0].ToLower().TrimStart('/')] = urls[1].TrimStart('/');
+				}
+				staticUrlRedirections = urlRedirections;
+				lastUrlRedirectionList = currentRedirectList;
+			}
+			string urlTarget;
+			if (urlRedirections.TryGetValue(p.request_url.AbsolutePath.ToLower().TrimStart('/'), out urlTarget))
+			{
+				p.writeRedirect(p.request_url.Scheme + "://" + p.request_url.Authority + "/" + urlTarget);
+				return true;
+			}
+			return false;
+		}
+
+		private bool HandlePublicServiceDisabled(HttpProcessor p)
+		{
+			if (!TimelapseWrapper.cfg.options.enabled)
+			{
+				p.writeFailure("503 Service Unavailable");
+				return true;
+			}
+			return false;
+		}
+		private string GetCameraNameHtml(CameraSpec cs)
+		{
+			StringBuilder sb = new StringBuilder();
+
+			if (string.IsNullOrWhiteSpace(cs.cameraNameImageUrl))
+			{
+				string color = string.IsNullOrWhiteSpace(cs.cameraNameColor) ? "#999999" : cs.cameraNameColor;
+				string bgColor = string.IsNullOrWhiteSpace(cs.cameraNameBackgroundColor) ? "rgba(0,0,0,0.5)" : cs.cameraNameBackgroundColor;
+				sb.Append("<span style=\"color:").Append(color);
+				sb.Append(";background-color:").Append(bgColor);
+				sb.Append(";font-size:").Append(cs.cameraNameFontSizePts).Append("pt;\">");
+				sb.Append(cs.name).Append("</span>");
+			}
+			else
+			{
+				sb.Append("<img src=\"");
+				sb.Append(HttpUtility.HtmlEncode(cs.cameraNameImageUrl));
+				sb.Append("\" title=\"").Append(cs.name);
+				sb.Append("\" alt=\"").Append(cs.name);
+				sb.Append("\" />");
+			}
+			return sb.ToString();
+		}
+
+		private string GetCameraPageStyleCSS(CameraSpec cs)
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.Append("body { ");
+
+			sb.Append("background-color:");
+			sb.Append(string.IsNullOrWhiteSpace(cs.backgroundColor) ? "#666666" : HttpUtility.HtmlEncode(cs.backgroundColor));
+			sb.Append(";");
+
+			if (!string.IsNullOrWhiteSpace(cs.backgroundImageUrl))
+				sb.Append("background-image:url('" + HttpUtility.JavaScriptStringEncode(cs.backgroundImageUrl) + "');");
+
+			if (!string.IsNullOrWhiteSpace(cs.textColor))
+				sb.Append("color:").Append(cs.textColor).Append(";");
+
+			sb.Append(" } a { ");
+
+			if (!string.IsNullOrWhiteSpace(cs.linkColor))
+				sb.Append("color:").Append(cs.linkColor).Append(";");
+			if (!string.IsNullOrWhiteSpace(cs.linkBackgroundColor))
+				sb.Append("background-color:").Append(cs.linkBackgroundColor).Append(";");
+
+			sb.Append(" } .bgcolored {");
+
+			if (!string.IsNullOrWhiteSpace(cs.textBackgroundColor))
+				sb.Append("background-color:").Append(cs.textBackgroundColor).Append(";");
+			sb.Append("}");
+			sb.Append(" #navmenuwrapper { font-size:");
+			sb.Append(cs.cameraNavigationFontSizePts);
+			sb.Append("pt; }");
+
+			return sb.ToString();
 		}
 
 		private List<KeyValuePair<string, string>> GetCacheEtagHeaders(TimeSpan maxAge, string etag)
@@ -289,9 +487,10 @@ namespace TimelapseCore
 								continue;
 							// We try to store the images using the camera's local time zone so that
 							// the public categorization matches the file system categorization.
-							DateTime fileTimeStamp = GetImageTimestamp(cs, rxDateTime, fi);
+							string tempF;
+							DateTime fileTimeStamp = GetImageTimestamp(cs, rxDateTime, fi, out tempF);
 
-							string fileKey = Util.GetBundleKeyForTimestamp(fileTimeStamp);
+							string fileKey = Util.GetBundleKeyForTimestamp(fileTimeStamp, tempF);
 							string bundleFilePath = Util.GetBundleFilePathForTimestamp(cs, fileTimeStamp);
 
 							byte[] data = File.ReadAllBytes(fi.FullName);
@@ -314,8 +513,9 @@ namespace TimelapseCore
 			return true;
 		}
 
-		private static DateTime GetImageTimestamp(CameraSpec cs, Regex rxDateTime, FileInfo fi)
+		private static DateTime GetImageTimestamp(CameraSpec cs, Regex rxDateTime, FileInfo fi, out string tempF)
 		{
+			tempF = "";
 			DateTime fileTimeStamp = DateTime.Now;
 			if (cs.timestampType == TimestampType.File_Created)
 			{
@@ -325,9 +525,18 @@ namespace TimelapseCore
 			{
 				fileTimeStamp = Util.FromUTC(fi.LastWriteTimeUtc, cs.timezone);
 			}
-			else if (cs.timestampType == TimestampType.DateTime_FromBinary)
+			else if (cs.timestampType == TimestampType.DateTime_FromBinary || cs.timestampType == TimestampType.DateTime_FromBinary_With_Temp_F)
 			{
 				string name = fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
+				if (cs.timestampType == TimestampType.DateTime_FromBinary_With_Temp_F)
+				{
+					string[] parts = name.Split(' ');
+					if (parts.Length >= 2)
+					{
+						name = parts[0];
+						tempF = parts[1];
+					}
+				}
 				long binaryForm;
 				bool success = false;
 				if (long.TryParse(name, out binaryForm))

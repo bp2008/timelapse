@@ -15,7 +15,7 @@ namespace TimelapseCore
 
 		TimelapseServer httpServer;
 		public static DateTime startTime = DateTime.MinValue;
-		public static ProxyConfig cfg;
+		public static TimelapseConfig cfg;
 
 		public TimelapseWrapper()
 		{
@@ -24,7 +24,7 @@ namespace TimelapseCore
 			System.Net.ServicePointManager.Expect100Continue = false;
 			System.Net.ServicePointManager.DefaultConnectionLimit = 640;
 
-			cfg = new ProxyConfig();
+			cfg = new TimelapseConfig();
 			if (File.Exists(Globals.ConfigFilePath))
 				cfg.Load(Globals.ConfigFilePath);
 			else

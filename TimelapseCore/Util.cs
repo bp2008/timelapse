@@ -238,39 +238,72 @@ namespace TimelapseCore
 				return TimeZoneInfo.ConvertTimeFromUtc(dt, Util.GetTimeZoneInfo(timezoneid_target, TimeZoneInfo.Local));
 		}
 
-		internal static string GetBundleKeyForTimestamp(DateTime t)
+		public static string GetBundleKeyForTimestamp(DateTime t, string tempF)
 		{
 			return t.Year.ToString().PadLeft(4, '0')
 				+ t.Month.ToString().PadLeft(2, '0')
 				+ t.Day.ToString().PadLeft(2, '0')
 				+ t.Hour.ToString().PadLeft(2, '0')
 				+ t.Minute.ToString().PadLeft(2, '0')
-				+ t.Second.ToString().PadLeft(2, '0');
+				+ t.Second.ToString().PadLeft(2, '0')
+				+ (string.IsNullOrWhiteSpace(tempF) ? "" : (" " + tempF));
 		}
 
-		internal static string GetBundleFilePathForTimestamp(CameraSpec cs, DateTime t)
+		public static string GetBundleFilePathForTimestamp(CameraSpec cs, DateTime t)
 		{
 			return Globals.ImageArchiveDirectoryBase + cs.id + "/" + t.Year.ToString().PadLeft(4, '0') + "/" + t.Month.ToString().PadLeft(2, '0') + "/" + t.Day.ToString().PadLeft(2, '0') + ".bdl";
 		}
 
-		internal static DateTime GetTimestampFromBundleKey(string fileName)
+		public static DateTime GetTimestampFromBundleKey(string fileName, out string tempF)
 		{
 			int year, month, day, hour, minute, second;
-			if (fileName.Length == 14
+			if (fileName.Length >= 14
 				&& int.TryParse(fileName.Substring(0, 4), out year)
 				&& int.TryParse(fileName.Substring(4, 2), out month)
 				&& int.TryParse(fileName.Substring(6, 2), out day)
 				&& int.TryParse(fileName.Substring(8, 2), out hour)
 				&& int.TryParse(fileName.Substring(10, 2), out minute)
 				&& int.TryParse(fileName.Substring(12, 2), out second))
+			{
+				if (fileName.Length > 14)
+					tempF = fileName.Substring(15);
+				else
+					tempF = "";
 				return new DateTime(year, month, day, hour, minute, second);
+			}
 			else
+			{
+				tempF = "";
 				return DateTime.MinValue;
+			}
 
 		}
-		internal static string GetDisplayableTime(DateTime t, bool includeSeconds)
+		public static string GetDisplayableTime(DateTime t, bool includeSeconds)
 		{
-			return t.ToString("T");
+			return t.ToString(includeSeconds ? "T" : "t");
+		}
+		public static string Colorize(string tempf, string degrees = "&deg;")
+		{
+			try
+			{
+				float dataF = float.Parse(tempf);
+				string color;
+				if (dataF <= 0)
+					color = "Blue";
+				else if (dataF <= 32)
+					color = "#0050A0";
+				else if (dataF <= 55)
+					color = "#006850";
+				else if (dataF <= 75)
+					color = "Green";
+				else if (dataF <= 90)
+					color = "#884400";
+				else
+					color = "Red";
+				return "<span style=\"color: " + color + ";\">" + tempf + degrees + "</span>";
+			}
+			catch (Exception) { }
+			return tempf + degrees;
 		}
 	}
 }

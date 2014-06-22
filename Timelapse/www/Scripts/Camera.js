@@ -1,6 +1,9 @@
 function Navigate(path)
 {
-	$("#leftMenu").load("Navigation?path=" + encodeURIComponent(path) + "&cam=" + camId);
+	$("#navmenuwrapper").load("Navigation?path=" + encodeURIComponent(path) + "&cam=" + camId, function ()
+	{
+		doResize();
+	});
 	$("#ajax-loader-t").hide();
 }
 function Img(linkIdx, path)
@@ -9,8 +12,11 @@ function Img(linkIdx, path)
 	{
 		$("#imgFrame").attr("src", path);
 		currentImgSrc = path;
-		var ofst = $("#imglnk" + linkIdx).offset();
+		var jqLink = $("#imglnk" + linkIdx);
+		currentImgTime = jqLink.html();
+		var ofst = jqLink.offset();
 		$("#ajax-loader-t").css("top", ofst.top + "px").css("left", ofst.left + $("#imglnk" + linkIdx).width() + "px").show();
+		$("#imgtime").html("...");
 	}
 }
 
@@ -50,14 +56,20 @@ $(function ()
 				originheight = this.naturalHeight;
 				doResize();
 			}
+			$("#imgtime").html(currentImgTime);
+			$("#imgtime").css("min-width", $("#imgtime").width() + "px");
 			if ($("#imgFrame").attr("src") == currentImgSrc)
 				$("#ajax-loader-t").hide();
 		}
 	});
 	$("#imgFrame").error(function ()
 	{
-		alert('Failed to load iamge.');
+		alert('Failed to load image.');
 	});
+	if (imgFrameGradientBg)
+	{
+		$("#camCell").css("background", "linear-gradient(135deg, #131313 0%,#1c1c1c 9%,#2b2b2b 18%,#111111 28%,#000000 38%,#2c2c2c 56%,#474747 68%,#666666 80%,#595959 90%,#4c4c4c 100%)");
+	}
 });
 function PopupMessage(msg)
 {
@@ -80,28 +92,23 @@ function doResize()
 function resize(wasCausedByTrigger)
 {
 	var windowW = $(window).width(), windowH = $(window).height();
-	$("#outerFrame").css("width", windowW + "px");
-	$("#outerFrame").css("height", windowH + "px"); // TODO: Try commenting the outerframe sizing lines here.
-
 
 	var topMenuHeight = $("#topMenu").outerHeight(true);
 	var leftMenuWidth = $("#leftMenu").outerWidth(true);
 	var camCellWidth = (windowW - leftMenuWidth);
 
 	$("#topMenu").css("width", camCellWidth + "px");
+	$("#topMenu").css("left", leftMenuWidth + "px");
 	$("#camCell").css("width", camCellWidth + "px");
-	$("#camCell").css("top", topMenuHeight + "px");
 	$("#camCell").css("height", (windowH - topMenuHeight) + "px");
+	$("#camCell").css("top", topMenuHeight + "px");
+	$("#camCell").css("left", leftMenuWidth + "px");
+	$("#leftMenu").css("height", windowH + "px");
 
+	var menuPadding = $("#leftMenuInner").outerHeight(true) - $("#leftMenuInner").height();
+	$("#navlinks").css("height", (windowH - (menuPadding + $("#navheader").outerHeight(true) + $("#cameraNameDiv").outerHeight(true))) + "px");
 
 	ImgResized();
-
-	//	if (!wasCausedByTrigger)
-	//	{
-	//		if (resizeTimeout != null)
-	//			clearTimeout(resizeTimeout);
-	//		resizeTimeout = setTimeout(function () { resize(true) }, 100);
-	//	}
 }
 function ImgResized()
 {
@@ -134,8 +141,9 @@ function ImgResized()
 		// Find the mouse position percentage relative to the center of the image at its old size
 		var imgPos = $("#imgFrame").position();
 		var leftMenuWidth = $("#leftMenu").outerWidth(true);
+		var topMenuHeight = $("#topMenu").outerHeight(true);
 		var mouseRelX = -0.5 + (parseFloat((mouseX - leftMenuWidth) - imgPos.left) / previousImageDraw.w);
-		var mouseRelY = -0.5 + (parseFloat(mouseY - imgPos.top) / previousImageDraw.h);
+		var mouseRelY = -0.5 + (parseFloat((mouseY - topMenuHeight) - imgPos.top) / previousImageDraw.h);
 		// Get the difference in image size
 		var imgSizeDiffX = imgDrawWidth - previousImageDraw.w;
 		var imgSizeDiffY = imgDrawHeight - previousImageDraw.h;
