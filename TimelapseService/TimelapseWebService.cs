@@ -16,7 +16,7 @@ namespace TimelapseService
 		public TimelapseWebService()
 		{
 			InitializeComponent();
-			server = new TimelapseWrapper();
+			server = new TimelapseWrapper(false);
 		}
 
 		protected override void OnStart(string[] args)

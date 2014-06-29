@@ -15,18 +15,16 @@ namespace TimelapseCore
 		//public static string jQueryUIJsPath = "../Scripts/jquery-ui.min.js";
 		//public static string jQueryUICssPath = "../Styles/jquery-ui.css";
 
-		static Globals()
-		{
-			Initialize(System.Reflection.Assembly.GetExecutingAssembly().Location);
-		}
 		public static void Initialize(string exePath)
 		{
 			executablePath = exePath;
 			applicationRoot = new FileInfo(executablePath).Directory.FullName.TrimEnd('\\', '/');
 			applicationDirectoryBase = applicationRoot + "/";
-			configFilePath = applicationDirectoryBase + "Config.cfg";
 			wwwDirectoryBase = applicationRoot + "/www/";
-			imageArchiveDirectoryBase = applicationRoot + "/imgarchive/";
+			imageArchiveDirectoryBase = applicationRoot + "/Images/imgarchive/";
+			writableDirectoryBase = applicationRoot + "/Images/writabledir/";
+			configFilePath = writableDirectoryBase + "Config.cfg";
+			errorFilePath = writableDirectoryBase + "TimelapseErrors.cfg";
 		}
 		private static string executablePath;
 		private static string applicationRoot;
@@ -44,6 +42,23 @@ namespace TimelapseCore
 		public static string ApplicationDirectoryBase
 		{
 			get { return applicationDirectoryBase; }
+		}
+		private static string writableDirectoryBase;
+
+		/// <summary>
+		/// Gets the full path to a persistent directory where the application can write to.  Includes trailing '/'.
+		/// </summary>
+		public static string WritableDirectoryBase
+		{
+			get { return writableDirectoryBase; }
+		}
+		private static string errorFilePath;
+		/// <summary>
+		/// Gets the full path to the error log file.  Includes trailing '/'.
+		/// </summary>
+		public static string ErrorFilePath
+		{
+			get { return errorFilePath; }
 		}
 		private static string configFilePath;
 		/// <summary>
@@ -69,6 +84,6 @@ namespace TimelapseCore
 		{
 			get { return imageArchiveDirectoryBase; }
 		}
-		public static string Version = "0.1";
+		public static string Version = "0.2";
 	}
 }

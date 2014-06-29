@@ -11,6 +11,7 @@ using System.Web;
 using System.Net.Sockets;
 using TimelapseCore.Configuration;
 using System.Net;
+using System.Security.AccessControl;
 
 namespace TimelapseCore
 {
@@ -28,6 +29,20 @@ namespace TimelapseCore
 				string requestedPage = Uri.UnescapeDataString(p.request_url.AbsolutePath.TrimStart('/'));
 				string requestedPageLower = requestedPage.ToLower();
 
+				if (requestedPage == "errors")
+				{
+					string errors = File.ReadAllText(Globals.ErrorFilePath);
+					p.writeSuccess();
+					p.outputStream.Write(HttpUtility.HtmlEncode(errors).Replace("\r\n", "<br/>").Replace("\r", "<br/>").Replace("\n", "<br/>"));
+					return;
+				}
+				if (requestedPage == "error")
+				{
+					Logger.Debug("/error page loaded");
+					p.writeSuccess();
+					p.outputStream.Write("Error written to log");
+					return;
+				}
 				if (requestedPage == "admin")
 				{
 					p.writeRedirect("admin/main");
@@ -63,7 +78,7 @@ namespace TimelapseCore
 					Pages.Admin.AdminPage.HandleRequest(adminPage, p, s);
 					return;
 				}
-				else if (requestedPage == "Navigation")
+				else if (requestedPage == "Navigation" || requestedPage == "NavigationNextDay")
 				{
 					if (HandlePublicServiceDisabled(p))
 						return;
@@ -74,7 +89,10 @@ namespace TimelapseCore
 					{
 						string path = p.GetParam("path");
 						p.writeSuccess();
-						p.outputStream.Write(Navigation.GetNavHtml(cs, path));
+						if (requestedPage == "Navigation")
+							p.outputStream.Write(Navigation.GetNavHtml(cs, path));
+						else
+							p.outputStream.Write(Navigation.GetNavHtmlForNextDay(cs, path));
 					}
 				}
 				else if (requestedPage == "TimeZoneList")
@@ -123,6 +141,11 @@ namespace TimelapseCore
 										return;
 									}
 								}
+								if (!MaintainCamera(cs))
+								{
+									p.writeFailure("500 Internal Server Error");
+									return;
+								}
 								string latestImgTime;
 								string path = cs.id + "/" + Navigation.GetLatestImagePath(cs, out latestImgTime);
 								if (path == p.GetHeaderValue("if-none-match"))
@@ -132,7 +155,6 @@ namespace TimelapseCore
 								}
 								byte[] data = GetImageData(path);
 								List<KeyValuePair<string, string>> headers = GetCacheEtagHeaders(TimeSpan.Zero, path);
-								headers.Add(new KeyValuePair<string, string>("ImgTime", latestImgTime));
 								p.writeSuccess("image/jpeg", data.Length, additionalHeaders: headers);
 								p.outputStream.Flush();
 								p.rawOutputStream.Write(data, 0, data.Length);
@@ -151,7 +173,6 @@ namespace TimelapseCore
 								}
 								byte[] data = GetImageData(requestedPage);
 								List<KeyValuePair<string, string>> headers = GetCacheEtagHeaders(TimeSpan.FromDays(365), requestedPage);
-								headers.Add(new KeyValuePair<string, string>("ImgTime", "!")); // TODO: Implement this to put in the real time stamp.
 								p.writeSuccess("image/jpeg", data.Length, additionalHeaders: headers);
 								p.outputStream.Flush();
 								p.rawOutputStream.Write(data, 0, data.Length);
@@ -223,6 +244,7 @@ namespace TimelapseCore
 							{
 								html = html.Replace("%REMOTEIP%", p.RemoteIPAddress);
 								html = html.Replace("%SYSTEM_NAME%", TimelapseWrapper.cfg.options.systemName);
+								html = html.Replace("%APP_VERSION%", Globals.Version);
 							}
 							catch (Exception ex)
 							{
@@ -236,10 +258,10 @@ namespace TimelapseCore
 						{
 							if (fi.LastWriteTimeUtc.ToString("R") == p.GetHeaderValue("if-modified-since"))
 							{
-								p.writeSuccess("image/jpeg", -1, "304 Not Modified");
+								p.writeSuccess(Mime.GetMimeType(fi.Extension), -1, "304 Not Modified");
 								return;
 							}
-							p.writeSuccess(Mime.GetMimeType(fi.Extension), additionalHeaders: GetCacheLastModifiedHeaders(TimeSpan.FromDays(1), fi.LastWriteTimeUtc));
+							p.writeSuccess(Mime.GetMimeType(fi.Extension), additionalHeaders: GetCacheLastModifiedHeaders(TimeSpan.FromHours(1), fi.LastWriteTimeUtc));
 							p.outputStream.Flush();
 							using (FileStream fs = fi.OpenRead())
 							{
@@ -296,7 +318,7 @@ namespace TimelapseCore
 					{
 						using (MemoryStream msJpg = new MemoryStream())
 						{
-							entry.Extract(msJpg); 
+							entry.Extract(msJpg);
 							byte[] jpegData = msJpg.ToArray();
 							List<KeyValuePair<string, string>> headers = new List<KeyValuePair<string, string>>();
 							headers.Add(new KeyValuePair<string, string>("Content-Disposition", "inline; filename=\"" + cs.name + " " + entry.LastModified.ToString("yyyy-MM-dd HH-mm-ss") + ".jpg\""));
@@ -482,7 +504,6 @@ namespace TimelapseCore
 						{
 							if (watchCopying.ElapsedMilliseconds > 10000 && watchTotal.ElapsedMilliseconds > 25000)
 								break;
-
 							if (!fi.Name.EndsWith(".jpg"))
 								continue;
 							// We try to store the images using the camera's local time zone so that
@@ -493,14 +514,34 @@ namespace TimelapseCore
 							string fileKey = Util.GetBundleKeyForTimestamp(fileTimeStamp, tempF);
 							string bundleFilePath = Util.GetBundleFilePathForTimestamp(cs, fileTimeStamp);
 
-							byte[] data = File.ReadAllBytes(fi.FullName);
+							int tries = 0;
+							int tryLimit = 5;
+							while (tries < tryLimit)
+							{
+								try
+								{
+									byte[] data = File.ReadAllBytes(fi.FullName);
 
-							filesToSave.Clear();
-							filesToSave.Add(fileKey, data);
-							FileBundle.FileBundleManager.SaveFiles(bundleFilePath, filesToSave);
+									filesToSave.Clear();
+									filesToSave.Add(fileKey, data);
+									FileBundle.FileBundleManager.SaveFiles(bundleFilePath, filesToSave);
 
-							// Delete the original file
-							fi.Delete();
+									// Delete the original file
+									fi.Delete();
+
+									break;
+								}
+								catch (Exception ex)
+								{
+									if (++tries < tryLimit)
+									{
+										Thread.Sleep(1000 * (tries));
+										continue;
+									}
+									Logger.Debug(ex);
+									break;
+								}
+							}
 						}
 					}
 				}
@@ -544,6 +585,8 @@ namespace TimelapseCore
 					try
 					{
 						fileTimeStamp = DateTime.FromBinary(binaryForm); // We are honoring the sender's timestamp without modifying the time zone.
+						fileTimeStamp = TimeZoneInfo.ConvertTimeToUtc(fileTimeStamp, TimeZoneInfo.Local);
+						fileTimeStamp = Util.FromUTC(fileTimeStamp, cs.timezone);
 						success = true;
 					}
 					catch (Exception ex)

@@ -67,10 +67,20 @@
     </Content>
     <Content Include="www\All.html" />
     <Content Include="www\Camera.html" />
+    <Content Include="www\Images\ajax-loader-t.gif" />
+    <Content Include="www\Images\ajax-loader-t2.gif" />
+    <Content Include="www\Images\ajax-loader-t3.gif" />
+    <Content Include="www\Images\ajax-loader-t4.gif" />
+    <Content Include="www\Images\ajax-loader-t5.gif" />
+    <Content Include="www\Images\ajax-loader-t6.gif" />
+    <Content Include="www\Images\ajax-loader-t7.gif" />
+    <Content Include="www\Images\ajax-loader-t8.gif" />
     <Content Include="www\Images\ajax-loader.gif" />
     <Content Include="www\Images\asc.gif" />
     <Content Include="www\Images\bg.gif" />
     <Content Include="www\Images\desc.gif" />
+    <Content Include="www\Images\SlideshowPauseButton.png" />
+    <Content Include="www\Images\SlideshowPlayButton.png" />
     <Content Include="www\Scripts\Camera.js" />
     <Content Include="www\Scripts\jquery-1.11.1.js" />
     <Content Include="www\Scripts\jquery-1.11.1.min.js" />

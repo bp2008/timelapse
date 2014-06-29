@@ -10,6 +10,55 @@ namespace TimelapseCore
 {
 	public static class Navigation
 	{
+		public static string GetNavHtmlForNextDay(CameraSpec cs, string path)
+		{
+			string[] parts = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+			if (parts.Length != 3)
+				return "Invalid path format.";
+			else
+			{
+				try
+				{
+					int year = int.Parse(parts[0]);
+					int month = int.Parse(parts[1]);
+					int day = int.Parse(parts[2]);
+					// The goal is to find the next day that has images.
+					DirectoryInfo diRoot = new DirectoryInfo(Globals.ImageArchiveDirectoryBase + cs.id);
+					List<DateTime> monthsAvailable = new List<DateTime>();
+					foreach (DirectoryInfo di in diRoot.GetDirectories("*", SearchOption.AllDirectories))
+					{
+						int y, m;
+						if (int.TryParse(di.Name, out m) && m > 0 & m < 13 && di.Parent.Name.Length == 4 && int.TryParse(di.Parent.Name, out y))
+							if (y > year || (y == year && m >= month))
+								monthsAvailable.Add(new DateTime(y, m, 1));
+					}
+					foreach (DateTime date in monthsAvailable)
+					{
+						DateTime d = date;
+						int thisMonth = d.Month;
+						if (d.Year == year && d.Month == month && d.Day <= day)
+							d = d.AddDays((day - d.Day) + 1);
+						while (thisMonth == d.Month)
+						{
+							string testPath = d.Year + "/" + d.Month.ToString().PadLeft(2, '0') + "/" + d.Day.ToString().PadLeft(2, '0');
+							FileInfo fiBdl = new FileInfo(Globals.ImageArchiveDirectoryBase + cs.id + "/" + testPath + ".bdl");
+							if (fiBdl.Exists)
+							{
+								List<string> fileNames = FileBundle.FileBundleManager.GetFileList(fiBdl.FullName);
+								if (fileNames.Count > 0)
+									return GetNavHtml(cs, testPath);
+							}
+							d = d.AddDays(1);
+						}
+					}
+					return "End of timelapse slideshow.<br/><a href=\"javascript:location.reload();\">Click here to reload the page.</a>";
+				}
+				catch (Exception)
+				{
+					return "An error occurred.";
+				}
+			}
+		}
 		public static string GetNavHtml(CameraSpec cs, string path)
 		{
 			StringBuilder sb = new StringBuilder();
@@ -154,12 +203,7 @@ namespace TimelapseCore
 							return "Empty Bundle";
 						else
 						{
-							string tempF;
-							DateTime imgTimeStamp = Util.GetTimestampFromBundleKey(fileNames[fileNames.Count - 1], out tempF);
-							if (string.IsNullOrEmpty(tempF))
-								latestImgTime = Util.GetDisplayableTime(imgTimeStamp, true);
-							else
-								latestImgTime = Util.GetDisplayableTime(imgTimeStamp, false) + " " + Util.Colorize(tempF);
+							latestImgTime = GetImgTimeHtml(fileNames[fileNames.Count - 1]);
 							return dirPath + fileNames[fileNames.Count - 1];
 						}
 					}
@@ -168,7 +212,15 @@ namespace TimelapseCore
 			latestImgTime = "";
 			return GetLinkPath(di);
 		}
-
+		public static string GetImgTimeHtml(string bundleKey)
+		{
+			string tempF;
+			DateTime imgTimeStamp = Util.GetTimestampFromBundleKey(bundleKey, out tempF);
+			if (string.IsNullOrEmpty(tempF))
+				return Util.GetDisplayableTime(imgTimeStamp, true);
+			else
+				return Util.GetDisplayableTime(imgTimeStamp, false) + " " + Util.Colorize(tempF);
+		}
 		public static string GetLatestImagePath(CameraSpec cs, out string latestImgTime)
 		{
 			return GetLatestPath(Globals.ImageArchiveDirectoryBase + cs.id, true, out latestImgTime);

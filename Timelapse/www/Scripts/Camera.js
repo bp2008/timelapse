@@ -6,8 +6,11 @@ function Navigate(path)
 	});
 	$("#ajax-loader-t").hide();
 }
-function Img(linkIdx, path)
+function Img(linkIdx)
 {
+	var jqLink = $("#imglnk" + linkIdx);
+	path = jqLink.attr("href");
+	currentImgLinkIdx = parseInt(linkIdx);
 	if (currentImgSrc != path)
 	{
 		$("#imgFrame").attr("src", path);
@@ -15,11 +18,56 @@ function Img(linkIdx, path)
 		var jqLink = $("#imglnk" + linkIdx);
 		currentImgTime = jqLink.html();
 		var ofst = jqLink.offset();
-		$("#ajax-loader-t").css("top", ofst.top + "px").css("left", ofst.left + $("#imglnk" + linkIdx).width() + "px").show();
-		$("#imgtime").html("...");
+		$("#ajax-loader-t").insertAfter(jqLink);
+		$("#ajax-loader-t").show();
+		if (!slideshowActive)
+			$("#imgtime").html("...");
 	}
 }
-
+function startSlideshow()
+{
+	$("#SlideshowStartButton").hide();
+	$("#SlideshowStopButton").show();
+	slideshowActive = true;
+	SlideshowNextImg();
+}
+function stopSlideshow()
+{
+	$("#SlideshowStartButton").show();
+	$("#SlideshowStopButton").hide();
+	slideshowActive = false;
+}
+function SlideshowNextImg()
+{
+	if (!slideshowActive)
+		return;
+	if (currentImgLinkIdx <= 0)
+	{
+		// Get next day of images
+		$("#ajax-loader-t").hide();
+		$("#navmenuwrapper").load("NavigationNextDay?path=" + encodeURIComponent($("#navheader .directorypath").text()) + "&cam=" + camId, function ()
+		{
+			var links = $("#navlinks a");
+			if (links.length > 0)
+			{
+				currentImgLinkIdx = links.length;
+				SlideshowNextImg();
+			}
+			else
+			{
+				stopSlideshow();
+				$("#SlideshowStartButton").hide();
+			}
+			doResize();
+		});
+	}
+	else
+	{
+		Img(currentImgLinkIdx - 1);
+	}
+}
+var slideshowActive = false;
+var currentImgLinkIdx = 0;
 var currentImgSrc = "";
 var resizeTimeout = null;
 var zoomHintTimeout = null;
@@ -60,6 +108,8 @@ $(function ()
 			$("#imgtime").css("min-width", $("#imgtime").width() + "px");
 			if ($("#imgFrame").attr("src") == currentImgSrc)
 				$("#ajax-loader-t").hide();
+			if (slideshowActive)
+				SlideshowNextImg();
 		}
 	});
 	$("#imgFrame").error(function ()

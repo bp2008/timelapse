@@ -11,7 +11,7 @@ namespace TimelapseCmd
 		static TimelapseWrapper server;
 		static void Main(string[] args)
 		{
-			server = new TimelapseWrapper();
+			server = new TimelapseWrapper(false);
 			server.Start();
 
 			List<string> portStrings = new List<string>();

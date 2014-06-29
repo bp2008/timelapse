@@ -1144,6 +1144,7 @@ namespace SimpleHttp
 				HttpCookie newCookie = new HttpCookie(cookie.name, cookie.value);
 				newCookie.Expires = DateTime.UtcNow + cookie.expire;
 				httpCookieCollection.Add(newCookie);
+				//TimelapseCore.Logger.Debug("Response cookie: " + cookie.name + ":" + cookie.value);
 			}
 		}
 
@@ -1154,6 +1155,7 @@ namespace SimpleHttp
 			{
 				HttpCookie cookie = httpCookieCollection[key];
 				cookies.Add(Uri.UnescapeDataString(cookie.Name), Uri.UnescapeDataString(cookie.Value));
+				//TimelapseCore.Logger.Debug("Request cookie: " + Uri.UnescapeDataString(cookie.Name) + ":" + Uri.UnescapeDataString(cookie.Value));
 			}
 			return cookies;
 		}

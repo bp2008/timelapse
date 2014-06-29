@@ -17,12 +17,18 @@ namespace TimelapseCore
 		public static DateTime startTime = DateTime.MinValue;
 		public static TimelapseConfig cfg;
 
-		public TimelapseWrapper()
+		public TimelapseWrapper(bool isAspNet)
 		{
-			AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+			if (!isAspNet)
+			{
+				Logger.logType = LoggingMode.Console | LoggingMode.File;
+				Globals.Initialize(System.Reflection.Assembly.GetExecutingAssembly().Location);
+				AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+			}
 
 			System.Net.ServicePointManager.Expect100Continue = false;
-			System.Net.ServicePointManager.DefaultConnectionLimit = 640;
+			if (!isAspNet)
+				System.Net.ServicePointManager.DefaultConnectionLimit = 640;
 
 			cfg = new TimelapseConfig();
 			if (File.Exists(Globals.ConfigFilePath))
