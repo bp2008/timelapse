@@ -4,8 +4,8 @@
 }
 #ajax-loader-t
 {
-	position: absolute;
-	margin: 4px 0px 0px 5px;
+	position: relative;
+	margin: 2px 0px 0px 3px;
 }
 /*       */
 
@@ -43,6 +43,17 @@ td
 {
 	display: inline-block;
 	text-align: center;
+}
+#SlideshowStartButton, #SlideshowStopButton
+{
+	width: 24px;
+	height: 24px;
+	vertical-align: bottom;
+	cursor: pointer;
+}
+#SlideshowStopButton
+{
+	display: none;
 }
 #leftMenu
 {

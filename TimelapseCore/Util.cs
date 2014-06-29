@@ -224,7 +224,7 @@ namespace TimelapseCore
 		public static DateTime ToUTC(DateTime dt, string timezoneid_ifunspecified)
 		{
 			if (dt.Kind == DateTimeKind.Local)
-				return dt.ToUniversalTime();
+				return TimeZoneInfo.ConvertTimeToUtc(dt, TimeZoneInfo.Local);
 			else if (dt.Kind == DateTimeKind.Unspecified)
 				return TimeZoneInfo.ConvertTimeToUtc(dt, Util.GetTimeZoneInfo(timezoneid_ifunspecified, TimeZoneInfo.Local));
 			else
