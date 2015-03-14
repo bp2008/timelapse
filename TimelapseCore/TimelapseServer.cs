@@ -148,13 +148,17 @@ namespace TimelapseCore
 								}
 								string latestImgTime;
 								string path = cs.id + "/" + Navigation.GetLatestImagePath(cs, out latestImgTime);
+
+								List<KeyValuePair<string, string>> headers = GetCacheEtagHeaders(TimeSpan.Zero, path);
+								FileInfo imgFile = new FileInfo(Globals.ImageArchiveDirectoryBase + path);
+								headers.Add(new KeyValuePair<string, string>("Content-Disposition", "inline; filename=\"" + cs.name + " " + imgFile.Name.Substring(0, imgFile.Name.Length - imgFile.Extension.Length) + ".jpg\""));
+
 								if (path == p.GetHeaderValue("if-none-match"))
 								{
 									p.writeSuccess("image/jpeg", -1, "304 Not Modified");
 									return;
 								}
 								byte[] data = GetImageData(path);
-								List<KeyValuePair<string, string>> headers = GetCacheEtagHeaders(TimeSpan.Zero, path);
 								p.writeSuccess("image/jpeg", data.Length, additionalHeaders: headers);
 								p.outputStream.Flush();
 								p.rawOutputStream.Write(data, 0, data.Length);
@@ -166,13 +170,17 @@ namespace TimelapseCore
 									p.writeFailure("400 Bad Request");
 									return;
 								}
+
+								List<KeyValuePair<string, string>> headers = GetCacheEtagHeaders(TimeSpan.FromDays(365), requestedPage);
+								FileInfo imgFile = new FileInfo(Globals.ImageArchiveDirectoryBase + requestedPage);
+								headers.Add(new KeyValuePair<string, string>("Content-Disposition", "inline; filename=\"" + cs.name + " " + imgFile.Name.Substring(0, imgFile.Name.Length - imgFile.Extension.Length) + ".jpg\""));
+
 								if (requestedPage == p.GetHeaderValue("if-none-match"))
 								{
 									p.writeSuccess("image/jpeg", -1, "304 Not Modified");
 									return;
 								}
 								byte[] data = GetImageData(requestedPage);
-								List<KeyValuePair<string, string>> headers = GetCacheEtagHeaders(TimeSpan.FromDays(365), requestedPage);
 								p.writeSuccess("image/jpeg", data.Length, additionalHeaders: headers);
 								p.outputStream.Flush();
 								p.rawOutputStream.Write(data, 0, data.Length);
@@ -356,7 +364,7 @@ namespace TimelapseCore
 			string urlTarget;
 			if (urlRedirections.TryGetValue(p.request_url.AbsolutePath.ToLower().TrimStart('/'), out urlTarget))
 			{
-				p.writeRedirect(p.request_url.Scheme + "://" + p.request_url.Authority + "/" + urlTarget);
+				p.writeRedirect(urlTarget);
 				return true;
 			}
 			return false;

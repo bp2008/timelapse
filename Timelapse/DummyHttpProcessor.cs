@@ -14,6 +14,8 @@ namespace Timelapse
 		{
 			this.context = context;
 			this.srv = srv;
+			//context.Response.BufferOutput = false;
+			//rawOutputStream = new SimpleHttp.GlobalThrottledStream(context.Response.OutputStream, 0);
 			rawOutputStream = new System.IO.BufferedStream(context.Response.OutputStream);
 			outputStream = new StreamWriter(rawOutputStream);
 			http_method = context.Request.HttpMethod.ToUpper();

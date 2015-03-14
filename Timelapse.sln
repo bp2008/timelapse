@@ -1,6 +1,8 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Timelapse", "Timelapse\Timelapse.csproj", "{530283D3-5F7C-462B-8D75-23A375737237}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimelapseCore", "TimelapseCore\TimelapseCore.csproj", "{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}"

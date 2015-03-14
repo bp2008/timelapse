@@ -84,6 +84,6 @@ namespace TimelapseCore
 		{
 			get { return imageArchiveDirectoryBase; }
 		}
-		public static string Version = "0.2";
+		public static string Version = "0.3";
 	}
 }

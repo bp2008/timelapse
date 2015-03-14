@@ -104,6 +104,9 @@ namespace TimelapseCore.Configuration
 					this.options = o;
 					Save(Globals.ConfigFilePath);
 				}
+				SimpleHttp.GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(0, o.uploadBytesPerSecond);
+				SimpleHttp.GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(1, o.downloadBytesPerSecond);
+				SimpleHttp.GlobalThrottledStream.ThrottlingManager.BurstIntervalMs = o.throttlingGranularity;
 				return result;
 			}
 			return "0Invalid item type: " + itemtype;
