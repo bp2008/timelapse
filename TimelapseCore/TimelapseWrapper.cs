@@ -40,6 +40,13 @@ namespace TimelapseCore
 				cfg.Save(Globals.ConfigFilePath);
 			}
 			SimpleHttp.SimpleHttpLogger.RegisterLogger(Logger.httpLogger);
+
+			// The ASP.NET implementation does not currently support request throttling, though output throttling should be more-or-less possible easily.
+			SimpleHttp.GlobalThrottledStream.ThrottlingManager.Initialize(3);
+			SimpleHttp.GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(0, cfg.options.uploadBytesPerSecond);
+			SimpleHttp.GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(1, cfg.options.downloadBytesPerSecond);
+			SimpleHttp.GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(2, -1);
+			SimpleHttp.GlobalThrottledStream.ThrottlingManager.BurstIntervalMs = cfg.options.throttlingGranularity;
 		}
 		#region Start / Stop
 		/// <summary>

@@ -51,7 +51,7 @@ namespace SimpleHttp
 		/// 
 		/// This stream is for writing binary data.
 		/// </summary>
-		public BufferedStream rawOutputStream;
+		public Stream rawOutputStream;
 
 		/// <summary>
 		/// The cookies sent by the remote client.
@@ -79,6 +79,18 @@ namespace SimpleHttp
 		/// The protocol version string sent by the client.  e.g. "HTTP/1.1"
 		/// </summary>
 		public string http_protocol_versionstring;
+		/// <summary>
+		/// The path to and name of the requested page, not including the first '/'
+		/// 
+		/// For example, if the URL was "/articles/science/moon.html?date=2011-10-21", requestedPage would be "articles/science/moon.html"
+		/// </summary>
+		public string requestedPage;
+		/// <summary>
+		/// A string array containing the directories and the page name.
+		/// 
+		/// For example, if the URL was "/articles/science/moon.html?date=2011-10-21", pathParts would be { "articles", "science", "moon.html" }
+		/// </summary>
+		public string[] pathParts;
 		/// <summary>
 		/// A Dictionary mapping http header names to values. Names are all converted to lower case before being added to this Dictionary.
 		/// </summary>
@@ -192,6 +204,29 @@ namespace SimpleHttp
 			}
 		}
 
+		protected uint remoteIPAddressInt = 0;
+		/// <summary>
+		/// Returns the remote client's IPv4 address as a 32 bit unsigned integer.
+		/// </summary>
+		public uint RemoteIPAddressInt
+		{
+			get
+			{
+				if (remoteIPAddressInt != 0)
+					return remoteIPAddressInt;
+				try
+				{
+					byte[] bytes = RemoteIPAddressBytes;
+					if (bytes != null && bytes.Length == 4)
+						remoteIPAddressInt = BitConverter.ToUInt32(bytes, 0);
+				}
+				catch (Exception ex)
+				{
+					SimpleHttpLogger.Log(ex);
+				}
+				return remoteIPAddressInt;
+			}
+		}
 		public readonly bool secure_https;
 		private X509Certificate2 ssl_certificate;
 		#endregion
@@ -247,8 +282,12 @@ namespace SimpleHttp
 						return;
 					}
 				}
-				inputStream = new BufferedStream(tcpStream);
-				rawOutputStream = new BufferedStream(tcpStream);
+				int inputStreamThrottlingRuleset = 1;
+				int outputStreamThrottlingRuleset = 0;
+				if (IsLanConnection)
+					inputStreamThrottlingRuleset = outputStreamThrottlingRuleset = 2;
+				inputStream = new BufferedStream(new GlobalThrottledStream(tcpStream, inputStreamThrottlingRuleset, RemoteIPAddressInt));
+				rawOutputStream = new GlobalThrottledStream(tcpStream, outputStreamThrottlingRuleset, RemoteIPAddressInt);
 				outputStream = new StreamWriter(rawOutputStream);
 				try
 				{
@@ -562,14 +601,14 @@ namespace SimpleHttp
 				string[] argument = parts[i].Split(new char[] { '=' });
 				if (argument.Length == 2)
 				{
-					string key = Uri.UnescapeDataString(argument[0]);
+					string key = HttpUtility.UrlDecode(argument[0]);
 					if (!preserveKeyCharacterCase)
 						key = key.ToLower();
 					string existingValue;
 					if (arguments.TryGetValue(key, out existingValue))
-						arguments[key] += "," + Uri.UnescapeDataString(argument[1]);
+						arguments[key] += "," + HttpUtility.UrlDecode(argument[1]);
 					else
-						arguments[key] = Uri.UnescapeDataString(argument[1]);
+						arguments[key] = HttpUtility.UrlDecode(argument[1]);
 				}
 			}
 			if (hash != null)

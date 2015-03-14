@@ -13,6 +13,7 @@ function Img(linkIdx)
 	currentImgLinkIdx = parseInt(linkIdx);
 	if (currentImgSrc != path)
 	{
+		nextSelectedLink = jqLink;
 		$("#imgFrame").attr("src", path);
 		currentImgSrc = path;
 		var jqLink = $("#imglnk" + linkIdx);
@@ -82,6 +83,8 @@ var imgDigitalZoomOffsetY = 0;
 var previousImageDraw = new Object();
 var originwidth = 1280;
 var originheight = 720;
+var previousSelectedLink = null;
+var nextSelectedLink = null;
 previousImageDraw.x = -1;
 previousImageDraw.y = -1;
 previousImageDraw.w = -1;
@@ -108,6 +111,11 @@ $(function ()
 			$("#imgtime").css("min-width", $("#imgtime").width() + "px");
 			if ($("#imgFrame").attr("src") == currentImgSrc)
 				$("#ajax-loader-t").hide();
+			if (previousSelectedLink)
+				previousSelectedLink.removeClass("selected");
+			if (nextSelectedLink)
+				nextSelectedLink.addClass("selected");
+			previousSelectedLink = nextSelectedLink;
 			if (slideshowActive)
 				SlideshowNextImg();
 		}

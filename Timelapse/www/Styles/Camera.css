@@ -116,6 +116,10 @@ body
 	overflow-x: hidden;
 	overflow-y: auto;
 }
+#navlinks a.selected
+{
+	text-shadow: 0px 0px 5px #ff0000;
+}
 
 #popupFrame
 {

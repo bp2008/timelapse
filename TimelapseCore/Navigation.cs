@@ -128,7 +128,7 @@ namespace TimelapseCore
 						else
 							latestImgTime = Util.GetDisplayableTime(time, false) + " " + Util.Colorize(tempF);
 						string fullPath = pathRoot + HttpUtility.JavaScriptStringEncode(fileNames[i]) + ".jpg";
-						links.Add("<a id=\"imglnk" + i + "\" href=\"" + fullPath + "\" onclick=\"Img(" + i + ", '" + fullPath + "'); return false;\">" + latestImgTime + "</a>");
+						links.Add("<a id=\"imglnk" + i + "\" href=\"" + fullPath + "\" onclick=\"Img(" + i + "); return false;\">" + latestImgTime + "</a>");
 					}
 				}
 
