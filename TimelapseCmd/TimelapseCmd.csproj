@@ -62,7 +62,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(SolutionDir)Timelapse\www\*.*" "$(TargetDir)www\*.*" /E /C /R /Y /I</PostBuildEvent>
+    <PostBuildEvent>xcopy "$(SolutionDir)Timelapse\www\*.*" "$(TargetDir)www\*.*" /E /C /R /Y /I
+copy /Y /B "$(TargetDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Release\$(TargetName)$(TargetExt)"
+copy /Y /B "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Release\$(TargetName).pdb"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

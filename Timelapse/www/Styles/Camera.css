@@ -51,6 +51,30 @@ td
 	vertical-align: bottom;
 	cursor: pointer;
 }
+#SlideshowSpeedButton
+{
+	display: inline-block;
+	height: 19px;
+	vertical-align: bottom;
+	margin-right: 5px;
+	padding: 3px 3px 0px 2px;
+	cursor: pointer;
+	background-color: rgba(0,0,0,0.67);
+	color: #AAAAAA;
+	border: 1px solid #AAAAAA;
+	font-family: Arial, Sans-Serif;
+	font-size: 14px;
+}
+#SlideshowSpeedButton:hover
+{
+	background-color: rgba(0,0,0,0.33);
+	color: #FFFFFF;
+}
+#SlideshowSpeedButton:active
+{
+	background-color: #888888;
+	color: #FFFFFF;
+}
 #SlideshowStopButton
 {
 	display: none;
@@ -167,4 +191,14 @@ body
 	transform: scale(-1,-1);
 	-ms-filter: flipv fliph; /*IE*/
 	filter: flipv fliph; /*IE*/
+}
+.unselectable
+{
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	cursor: default;
 }

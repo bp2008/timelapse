@@ -636,7 +636,7 @@ namespace TimelapseCore
 				}
 				else
 				{
-					Logger.Debug("Regular expression match failed for camera '" + cs.id + "' file named '" + fi.Name + "'.");
+					Logger.Debug("Regular expression match failed for camera '" + cs.id + "' file named '" + fi.Name + "'. Regex string was \"" + rxDateTime.ToString() + "\"");
 					fileTimeStamp = Util.FromUTC(fi.CreationTimeUtc, cs.timezone);
 				}
 			}
@@ -663,7 +663,7 @@ namespace TimelapseCore
 			try
 			{
 				Session s = sm.GetSession(p.requestCookies.GetValue("cps"), p.requestCookies.GetValue("auth"));
-				if (s.permission == 100)
+				if (s != null && s.permission == 100)
 					p.responseCookies.Add("cps", s.sid, TimeSpan.FromMinutes(s.sessionLengthMinutes));
 				else
 				{
