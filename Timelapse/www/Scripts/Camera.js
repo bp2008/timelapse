@@ -1,3 +1,6 @@
+var slideshowDelay = 1000;
+var slideshowLastLoadStart = -1 * slideshowDelay;
+var settings = typeof (Storage) !== "undefined" ? localStorage : GetDummyLocalStorage();
 function Navigate(path)
 {
 	$("#navmenuwrapper").load("Navigation?path=" + encodeURIComponent(path) + "&cam=" + camId, function ()
@@ -13,6 +16,7 @@ function Img(linkIdx)
 	currentImgLinkIdx = parseInt(linkIdx);
 	if (currentImgSrc != path)
 	{
+		slideshowLastLoadStart = new Date().getTime();
 		nextSelectedLink = jqLink;
 		$("#imgFrame").attr("src", path);
 		currentImgSrc = path;
@@ -27,19 +31,91 @@ function Img(linkIdx)
 }
 function startSlideshow()
 {
-	$("#SlideshowStartButton").hide();
-	$("#SlideshowStopButton").show();
+	setSlideshowBtnState(1);
 	slideshowActive = true;
 	SlideshowNextImg();
 }
 function stopSlideshow()
 {
+	setSlideshowBtnState(0);
 	$("#SlideshowStartButton").show();
 	$("#SlideshowStopButton").hide();
 	slideshowActive = false;
+	if (slideshowTimeout != null)
+		clearTimeout(slideshowTimeout);
+}
+function setSlideshowBtnState(state)
+{
+	if (state == 0)
+	{
+		$("#SlideshowStartButton").show();
+		$("#SlideshowStopButton").hide();
+	}
+	else if (state == 1)
+	{
+		$("#SlideshowStartButton").hide();
+		$("#SlideshowStopButton").show();
+	}
+	else if (state == 2)
+	{
+		$("#SlideshowStartButton").hide();
+		$("#SlideshowStopButton").hide();
+		$("#SlideshowSpeedButton").hide();
+	}
+}
+function SlideshowSpeedChanged(e)
+{
+	var currentspeed = parseInt($("#SlideshowSpeedButton").attr("currentspeed"));
+	if(e.which == 2)
+		// Middle mouse, back it up
+		currentspeed--;
+	else
+		currentspeed++;
+	if (currentspeed < 1)
+		currentspeed = 6;
+	else if (currentspeed > 6)
+		currentspeed = 1;
+	SetSlideshowSpeed(currentspeed);
+	return false;
+}
+function SetSlideshowSpeed(speed)
+{
+	speed = parseInt(speed);
+	if(speed == 1)
+		slideshowDelay = 5000;
+	else if (speed == 2)
+		slideshowDelay = 1000;
+	else if (speed == 3)
+		slideshowDelay = 500;
+	else if (speed == 4)
+		slideshowDelay = 250;
+	else if (speed == 5)
+		slideshowDelay = 66;
+	else if (speed == 6)
+		slideshowDelay = 33;
+		
+	settings.setItem("slideshowspeed", speed);
+	
+	$("#SlideshowSpeedButton").attr("currentspeed", speed);
+	$("#SlideshowSpeedButton").text(speed + "x");
+}
+$(function()
+{
+	makeUnselectable($("#SlideshowSpeedButton, #SlideshowStartButton, #SlideshowStopButton"));
+	var slideshowSpeed = settings.getItem("slideshowspeed");
+	if (slideshowSpeed)
+		SetSlideshowSpeed(slideshowSpeed);
+});
+function ScheduleNextSlideshowImage()
+{
+	if (slideshowTimeout != null)
+		clearTimeout(slideshowTimeout);
+	slideshowTimeout = setTimeout(SlideshowNextImg, GetSlideshowDelay());
 }
 function SlideshowNextImg()
 {
+	if (slideshowTimeout != null)
+		clearTimeout(slideshowTimeout);
 	if (!slideshowActive)
 		return;
 	if (currentImgLinkIdx <= 0)
@@ -52,12 +128,13 @@ function SlideshowNextImg()
 			if (links.length > 0)
 			{
 				currentImgLinkIdx = links.length;
-				SlideshowNextImg();
+				ScheduleNextSlideshowImage();
 			}
 			else
 			{
 				stopSlideshow();
-				$("#SlideshowStartButton").hide();
+				setSlideshowBtnState(2);
+				location.reload();
 			}
 			doResize();
 		});
@@ -67,6 +144,21 @@ function SlideshowNextImg()
 		Img(currentImgLinkIdx - 1);
 	}
 }
+function GetSlideshowDelay()
+{
+	if (slideshowActive)
+	{
+		var now = new Date().getTime();
+		var timeAlreadyWaited = now - slideshowLastLoadStart;
+		var timeLeftToWait = slideshowDelay - timeAlreadyWaited;
+		if (timeLeftToWait < 0)
+			timeLeftToWait = 0;
+		return timeLeftToWait;
+	}
+	else
+		return 0;
+}
+var slideshowTimeout = null;
 var slideshowActive = false;
 var currentImgLinkIdx = 0;
 var currentImgSrc = "";
@@ -117,7 +209,7 @@ $(function ()
 				nextSelectedLink.addClass("selected");
 			previousSelectedLink = nextSelectedLink;
 			if (slideshowActive)
-				SlideshowNextImg();
+				ScheduleNextSlideshowImage();
 		}
 	});
 	$("#imgFrame").error(function ()
@@ -316,4 +408,30 @@ $(function ()
 function RepositionZoomHint()
 {
 	$("#zoomhint").css("left", (mouseX - $("#zoomhint").outerWidth(true)) + "px").css("top", (mouseY - $("#zoomhint").outerHeight(true)) + "px");
+}
+function makeUnselectable($target)
+{
+	$target
+		.addClass('unselectable') // All these attributes are inheritable
+		.attr('unselectable', 'on') // For IE9 - This property is not inherited, needs to be placed onto everything
+		.attr('draggable', 'false') // For moz and webkit, although Firefox 16 ignores this when -moz-user-select: none; is set, it's like these properties are mutually exclusive, seems to be a bug.
+		.on('dragstart', function () { return false; });  // Needed since Firefox 16 seems to ingore the 'draggable' attribute we just applied above when '-moz-user-select: none' is applied to the CSS 
+
+	$target // Apply non-inheritable properties to the child elements
+		.find('*')
+		.attr('draggable', 'false')
+		.attr('unselectable', 'on');
+};
+function GetDummyLocalStorage()
+{
+	var dummy = new Object();
+	dummy.getItem = function (key)
+	{
+		return dummy[key];
+	}
+	dummy.setItem = function (key, value)
+	{
+		return dummy[key] = value;
+	}
+	return dummy;
 }

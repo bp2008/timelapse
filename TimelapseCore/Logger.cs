@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace TimelapseCore
 {
@@ -72,7 +74,7 @@ namespace TimelapseCore
 							attempts = 10;
 						}
 						catch (Exception)
-						{ 
+						{
 							attempts++;
 						}
 					}
@@ -124,9 +126,18 @@ namespace TimelapseCore
 			}
 		}
 
-		public static SimpleHttp.ILogger httpLogger = new HttpLogger();
+		public static HttpLogger httpLogger = new HttpLogger();
+
+		public static void StartLoggingThreads()
+		{
+			httpLogger.StartLoggingThreads();
+		}
+		public static void StopLoggingThreads()
+		{
+			httpLogger.StopLoggingThreads();
+		}
 	}
-	class HttpLogger : SimpleHttp.ILogger
+	public class HttpLogger : SimpleHttp.ILogger
 	{
 		void SimpleHttp.ILogger.Log(Exception ex, string additionalInformation)
 		{
@@ -136,6 +147,80 @@ namespace TimelapseCore
 		void SimpleHttp.ILogger.Log(string str)
 		{
 			Logger.Debug(str);
+		}
+
+		void SimpleHttp.ILogger.LogRequest(DateTime time, string line)
+		{
+			itemsToLog.Enqueue(new Tuple<DateTime, string>(time, line));
+		}
+
+		ConcurrentQueue<Tuple<DateTime, string>> itemsToLog = new ConcurrentQueue<Tuple<DateTime, string>>();
+		Thread loggingThread = null;
+		public HttpLogger()
+		{
+		}
+		void loggingThreadLoop()
+		{
+			try
+			{
+				Tuple<DateTime, string> nextItemToLog;
+				while (true)
+				{
+					try
+					{
+						while (itemsToLog.TryDequeue(out nextItemToLog))
+						{
+							string logFileName = GetWebServerLogFilePathForToday(nextItemToLog.Item1);
+							FileInfo logFile = new FileInfo(logFileName);
+							DirectoryInfo di = logFile.Directory;
+							if (!di.Exists)
+								Directory.CreateDirectory(di.FullName);
+							File.AppendAllText(logFileName, nextItemToLog.Item2 + Environment.NewLine);
+						}
+						Thread.Sleep(100);
+					}
+					catch (ThreadAbortException ex)
+					{
+						throw ex;
+					}
+					catch (Exception ex)
+					{
+						Logger.Debug(ex);
+					}
+				}
+			}
+			catch (ThreadAbortException)
+			{
+			}
+			catch (Exception ex)
+			{
+				Logger.Debug(ex);
+			}
+		}
+		public void StopLoggingThreads()
+		{
+			try
+			{
+				if (loggingThread != null)
+					loggingThread.Abort();
+			}
+			catch (Exception) { }
+		}
+
+		public void StartLoggingThreads()
+		{
+			StopLoggingThreads();
+			loggingThread = new Thread(loggingThreadLoop);
+			loggingThread.Name = "HttpLogger thread";
+			loggingThread.Start();
+		}
+		/// <summary>
+		/// Gets the full path to the web server log file that should be used for events logged at the specified time.
+		/// </summary>
+		/// <returns></returns>
+		private string GetWebServerLogFilePathForToday(DateTime time)
+		{
+			return Globals.WritableDirectoryBase + "web_server_request_logs/" + time.Year + "/" + time.Month.ToString().PadLeft(2, '0') + "/" + time.Year + "-" + time.Month.ToString().PadLeft(2, '0') + "-" + time.Day.ToString().PadLeft(2, '0') + ".txt";
 		}
 	}
 }

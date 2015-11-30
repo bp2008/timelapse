@@ -24,7 +24,7 @@ namespace TimelapseCore
 			imageArchiveDirectoryBase = applicationRoot + "/Images/imgarchive/";
 			writableDirectoryBase = applicationRoot + "/Images/writabledir/";
 			configFilePath = writableDirectoryBase + "Config.cfg";
-			errorFilePath = writableDirectoryBase + "TimelapseErrors.cfg";
+			errorFilePath = writableDirectoryBase + "TimelapseErrors.txt";
 		}
 		private static string executablePath;
 		private static string applicationRoot;
@@ -84,6 +84,6 @@ namespace TimelapseCore
 		{
 			get { return imageArchiveDirectoryBase; }
 		}
-		public static string Version = "0.3";
+		public static string Version = "0.4";
 	}
 }

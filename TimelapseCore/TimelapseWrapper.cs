@@ -60,6 +60,8 @@ namespace TimelapseCore
 
 			httpServer = new TimelapseServer(cfg.webport, cfg.webport_https);
 			httpServer.Start();
+
+			Logger.StartLoggingThreads();
 		}
 		public void Stop()
 		{
@@ -68,6 +70,7 @@ namespace TimelapseCore
 				httpServer.Stop();
 				httpServer.Join(1000);
 			}
+			Logger.StopLoggingThreads();
 		}
 		#endregion
 

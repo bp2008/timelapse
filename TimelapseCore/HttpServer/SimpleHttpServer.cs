@@ -299,9 +299,15 @@ namespace SimpleHttp
 					try
 					{
 						if (http_method.Equals("GET"))
+						{
+							SimpleHttpLogger.LogRequest(DateTime.Now, this.RemoteIPAddress, "GET", request_url.OriginalString);
 							handleGETRequest();
+						}
 						else if (http_method.Equals("POST"))
+						{
+							SimpleHttpLogger.LogRequest(DateTime.Now, this.RemoteIPAddress, "POST", request_url.OriginalString);
 							handlePOSTRequest();
+						}
 					}
 					catch (Exception e)
 					{
@@ -314,6 +320,7 @@ namespace SimpleHttp
 				{
 					if (!isOrdinaryDisconnectException(e))
 						SimpleHttpLogger.LogVerbose(e);
+					SimpleHttpLogger.LogRequest(DateTime.Now, this.RemoteIPAddress, "FAIL", request_url.OriginalString);
 					this.writeFailure("400 Bad Request", "The request cannot be fulfilled due to bad syntax.");
 				}
 				outputStream.Flush();
@@ -887,6 +894,10 @@ namespace SimpleHttp
 						try
 						{
 							TcpClient s = listener.AcceptTcpClient();
+							if (s.ReceiveTimeout < 10000)
+								s.ReceiveTimeout = 10000;
+							if (s.SendTimeout < 10000)
+								s.SendTimeout = 10000;
 							int workerThreads, completionPortThreads;
 							ThreadPool.GetAvailableThreads(out workerThreads, out completionPortThreads);
 							// Here is where we could enforce a minimum number of free pool threads, 
@@ -918,14 +929,17 @@ namespace SimpleHttp
 						}
 						catch (Exception ex)
 						{
-							if (DateTime.Now.Hour != innerLastError.Hour || DateTime.Now.DayOfYear != innerLastError.DayOfYear)
+							if (!ex.Message.Contains("A blocking operation was interrupted by a call to WSACancelBlockingCall"))
 							{
-								innerLastError = DateTime.Now;
-								innerErrorCount = 0;
+								if (DateTime.Now.Hour != innerLastError.Hour || DateTime.Now.DayOfYear != innerLastError.DayOfYear)
+								{
+									innerLastError = DateTime.Now;
+									innerErrorCount = 0;
+								}
+								if (++innerErrorCount > 10)
+									throw ex;
+								SimpleHttpLogger.Log(ex, "Inner Error count this hour: " + innerErrorCount);
 							}
-							if (++innerErrorCount > 10)
-								throw ex;
-							SimpleHttpLogger.Log(ex, "Inner Error count this hour: " + innerErrorCount);
 							Thread.Sleep(1);
 						}
 					}
@@ -1018,6 +1032,14 @@ namespace SimpleHttp
 			try
 			{
 				stopServer();
+			}
+			catch (Exception ex)
+			{
+				SimpleHttpLogger.Log(ex);
+			}
+			try
+			{
+				GlobalThrottledStream.ThrottlingManager.Shutdown();
 			}
 			catch (Exception ex)
 			{
@@ -1190,7 +1212,7 @@ namespace SimpleHttp
 		public static Cookies FromHttpCookieCollection(HttpCookieCollection httpCookieCollection)
 		{
 			Cookies cookies = new Cookies();
-			foreach(string key in httpCookieCollection.AllKeys)
+			foreach (string key in httpCookieCollection.AllKeys)
 			{
 				HttpCookie cookie = httpCookieCollection[key];
 				cookies.Add(Uri.UnescapeDataString(cookie.Name), Uri.UnescapeDataString(cookie.Value));
@@ -1217,7 +1239,7 @@ namespace SimpleHttp
 	public static class SimpleHttpLogger
 	{
 		private static ILogger logger = null;
-		private static bool logVerbose = false;
+		private static bool logVerbose = true;
 		/// <summary>
 		/// (OPTIONAL) Keeps a static reference to the specified ILogger and uses it for http server error logging.  Only one logger can be registered at a time; attempting to register a second logger simply replaces the first one.
 		/// </summary>
@@ -1267,6 +1289,10 @@ namespace SimpleHttp
 			if (logVerbose)
 				Log(str);
 		}
+		internal static void LogRequest(DateTime time, string remoteHost, string requestMethod, string requestedUrl)
+		{
+			logger.LogRequest(time, time.ToString("yyyy-MM-dd hh:mm:ss tt") + ":\t" + remoteHost + "\t" + requestMethod + "\t" + requestedUrl);
+		}
 	}
 	/// <summary>
 	/// An interface which handles logging of exceptions and strings.
@@ -1284,6 +1310,12 @@ namespace SimpleHttp
 		/// </summary>
 		/// <param name="str">A string to log.</param>
 		void Log(string str);
+		/// <summary>
+		/// Log a request that was made to the server.
+		/// </summary>
+		/// <param name="time">The time of the request, from which the log file name will be chosen.</param>
+		/// <param name="line">The string to log, including a timestamp and all information desired. This string should not contain line breaks.</param>
+		void LogRequest(DateTime time, string line);
 	}
 	#endregion
 }
