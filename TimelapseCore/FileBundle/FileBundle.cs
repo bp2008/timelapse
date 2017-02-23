@@ -240,7 +240,6 @@ namespace TimelapseCore.FileBundle
 			{
 				readLock.Release();
 			}
-			return new List<string>();
 		}
 
 		#region Helpers

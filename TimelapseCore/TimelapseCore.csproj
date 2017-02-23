@@ -91,6 +91,7 @@
     <Compile Include="HttpServer\Mime.cs" />
     <Compile Include="HttpServer\GlobalThrottledStream.cs" />
     <Compile Include="HttpServer\SimpleHttpServer.cs" />
+    <Compile Include="HttpServer\SimpleThreadPool.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Navigation.cs" />
     <Compile Include="Pages\TimeZoneList.cs" />

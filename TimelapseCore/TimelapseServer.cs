@@ -89,10 +89,17 @@ namespace TimelapseCore
 					{
 						string path = p.GetParam("path");
 						p.writeSuccess();
-						if (requestedPage == "Navigation")
-							p.outputStream.Write(Navigation.GetNavHtml(cs, path));
-						else
-							p.outputStream.Write(Navigation.GetNavHtmlForNextDay(cs, path));
+						try
+						{
+							if (requestedPage == "Navigation")
+								p.outputStream.Write(Navigation.GetNavHtml(cs, path));
+							else
+								p.outputStream.Write(Navigation.GetNavHtmlForNextDay(cs, path));
+						}
+						catch (NavigationException)
+						{
+							p.outputStream.Write("Server busy. Please reload this page later.");
+						}
 					}
 				}
 				else if (requestedPage == "TimeZoneList")
@@ -147,7 +154,18 @@ namespace TimelapseCore
 									return;
 								}
 								string latestImgTime;
-								string path = cs.id + "/" + Navigation.GetLatestImagePath(cs, out latestImgTime);
+								DateTime dateTime;
+								string latestImagePathPart;
+								try
+								{
+									latestImagePathPart = Navigation.GetLatestImagePath(cs, out latestImgTime, out dateTime);
+								}
+								catch (NavigationException)
+								{
+									p.writeFailure("503 Service Unavailable");
+									return;
+								}
+								string path = cs.id + "/" + latestImagePathPart;
 
 								List<KeyValuePair<string, string>> headers = GetCacheEtagHeaders(TimeSpan.Zero, path);
 								FileInfo imgFile = new FileInfo(Globals.ImageArchiveDirectoryBase + path);
@@ -230,15 +248,28 @@ namespace TimelapseCore
 									p.writeFailure("400 Bad Request");
 									return;
 								}
-								string latestImgTime;
-								html = html.Replace("%NAVMENU%", Navigation.GetNavHtml(cs, Navigation.GetLatestPath(cs, out latestImgTime)));
+								string latestImgTime = "";
+								DateTime dateTime = DateTime.MinValue;
+								string navMenu;
+								string latestImagePathPart;
+								try
+								{
+									navMenu = Navigation.GetNavHtml(cs, Navigation.GetLatestPath(cs, out latestImgTime, out dateTime));
+									latestImagePathPart = Navigation.GetLatestImagePath(cs, out latestImgTime, out dateTime);
+								}
+								catch (NavigationException)
+								{
+									navMenu = "Server busy. Please reload this page later.";
+									latestImagePathPart = "latest";
+								}
+								html = html.Replace("%NAVMENU%", navMenu);
 								html = html.Replace("%TOPMENU%", cs.topMenuHtml);
 								html = html.Replace("%CAMID%", cs.id);
 								html = html.Replace("%CAMNAME%", cs.name);
 								html = html.Replace("%CSS%", GetCameraPageStyleCSS(cs));
 								html = html.Replace("%CAMFRAME_GRADIENT%", cs.imgBackgroundGradient ? "true" : "false");
 								html = html.Replace("%CAMNAME_HTML%", GetCameraNameHtml(cs));
-								string latestImagePath = cs.id + "/" + Navigation.GetLatestImagePath(cs, out latestImgTime) + ".jpg";
+								string latestImagePath = cs.id + "/" + latestImagePathPart + ".jpg";
 								html = html.Replace("%LATEST_IMAGE%", latestImagePath);
 								html = html.Replace("%LATEST_IMAGE_TIME%", HttpUtility.JavaScriptStringEncode(latestImgTime));
 							}
@@ -269,7 +300,7 @@ namespace TimelapseCore
 								p.writeSuccess(Mime.GetMimeType(fi.Extension), -1, "304 Not Modified");
 								return;
 							}
-							p.writeSuccess(Mime.GetMimeType(fi.Extension), additionalHeaders: GetCacheLastModifiedHeaders(TimeSpan.FromHours(1), fi.LastWriteTimeUtc));
+							p.writeSuccess(Mime.GetMimeType(fi.Extension), fi.Length, additionalHeaders: GetCacheLastModifiedHeaders(TimeSpan.FromHours(1), fi.LastWriteTimeUtc));
 							p.outputStream.Flush();
 							using (FileStream fs = fi.OpenRead())
 							{
@@ -296,18 +327,32 @@ namespace TimelapseCore
 				if (cs.showOnAllPage)
 				{
 					string imgsrc = "", imglink = "", namelink = "";
+					long imgDate;
 					if (cs.type == CameraType.ThirdPartyHosted)
 					{
-						imgsrc = cs.path_3rdpartyimg;
+						imgsrc = cs.path_3rdpartyimg.Replace("%TIME%", DateTime.Now.ToJavaScriptMilliseconds().ToString());
 						imglink = cs.path_3rdpartyimglink;
 						namelink = cs.path_3rdpartynamelink;
+						imgDate = DateTime.UtcNow.ToJavaScriptMilliseconds();
 					}
 					else
 					{
-						imgsrc = cs.id + "/latest.jpg";
+						//imgsrc = cs.id + "/latest.jpg";
 						imglink = namelink = "Camera.html?cam=" + cs.id;
+						string timeHtml;
+						DateTime timeObj;
+						try
+						{
+							Navigation.GetLatestImagePath(cs, out timeHtml, out timeObj);
+						}
+						catch (NavigationException)
+						{
+							timeObj = DateTime.Now;
+						}
+						imgsrc = cs.id + "/latest.jpg";
+						imgDate = timeObj.ToJavaScriptMilliseconds();
 					}
-					camerasList.Add("['" + HttpUtility.JavaScriptStringEncode(cs.id) + "', '" + HttpUtility.JavaScriptStringEncode(cs.name) + "', '" + HttpUtility.JavaScriptStringEncode(imgsrc) + "', '" + HttpUtility.JavaScriptStringEncode(imglink) + "', '" + HttpUtility.JavaScriptStringEncode(namelink) + "', '" + HttpUtility.JavaScriptStringEncode(cs.allPageOverlayMessage) + "']");
+					camerasList.Add("['" + HttpUtility.JavaScriptStringEncode(cs.id) + "', '" + HttpUtility.JavaScriptStringEncode(cs.name) + "', '" + HttpUtility.JavaScriptStringEncode(imgsrc) + "', '" + HttpUtility.JavaScriptStringEncode(imglink) + "', '" + HttpUtility.JavaScriptStringEncode(namelink) + "', '" + HttpUtility.JavaScriptStringEncode(cs.allPageOverlayMessage) + "', " + imgDate + "]");
 				}
 			}
 			return "[" + string.Join(",", camerasList) + "]";
@@ -459,9 +504,28 @@ namespace TimelapseCore
 			FileInfo bundleFile = new FileInfo(fi.Directory.FullName.TrimEnd('/', '\\') + ".bdl");
 			if (bundleFile.Exists)
 			{
-				IDictionary<string, byte[]> data = FileBundle.FileBundleManager.GetFiles(bundleFile.FullName, fileName);
-				if (data.Count == 1)
-					return data[fileName];
+				int tries = 0;
+				int tryLimit = 5;
+				while (tries < tryLimit)
+				{
+					try
+					{
+						IDictionary<string, byte[]> data = FileBundle.FileBundleManager.GetFiles(bundleFile.FullName, fileName);
+						if (data.Count == 1)
+							return data[fileName];
+						break;
+					}
+					catch (Exception ex)
+					{
+						if (++tries < tryLimit)
+						{
+							Thread.Sleep(1000 * (tries));
+							continue;
+						}
+						Logger.Debug(ex, "Tries: " + tries);
+						break;
+					}
+				}
 			}
 			return new byte[0];
 		}
@@ -546,7 +610,7 @@ namespace TimelapseCore
 										Thread.Sleep(1000 * (tries));
 										continue;
 									}
-									Logger.Debug(ex);
+									Logger.Debug(ex, "Tries: " + tries);
 									break;
 								}
 							}
@@ -705,6 +769,10 @@ namespace TimelapseCore
 
 		public override void stopServer()
 		{
+		}
+		public override bool shouldLogRequestsToFile()
+		{
+			return true;
 		}
 	}
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using TimelapseCore.Configuration;
 using System.Web;
+using System.Threading;
 
 namespace TimelapseCore
 {
@@ -44,7 +45,7 @@ namespace TimelapseCore
 							FileInfo fiBdl = new FileInfo(Globals.ImageArchiveDirectoryBase + cs.id + "/" + testPath + ".bdl");
 							if (fiBdl.Exists)
 							{
-								List<string> fileNames = FileBundle.FileBundleManager.GetFileList(fiBdl.FullName);
+								List<string> fileNames = GetFileListSafer(fiBdl.FullName);
 								if (fileNames.Count > 0)
 									return GetNavHtml(cs, testPath);
 							}
@@ -116,19 +117,22 @@ namespace TimelapseCore
 				if (fiBdl.Exists)
 				{
 					string pathRoot = HttpUtility.JavaScriptStringEncode(GetLinkPath(diArg, false));
-					List<string> fileNames = FileBundle.FileBundleManager.GetFileList(fiBdl.FullName);
-					fileNames.Sort();
-					fileNames.Reverse();
-					for (int i = 0; i < fileNames.Count; i++)
+					try
 					{
-						string tempF, latestImgTime;
-						DateTime time = Util.GetTimestampFromBundleKey(fileNames[i], out tempF);
-						if (string.IsNullOrEmpty(tempF))
-							latestImgTime = Util.GetDisplayableTime(time, true);
-						else
-							latestImgTime = Util.GetDisplayableTime(time, false) + " " + Util.Colorize(tempF);
-						string fullPath = pathRoot + HttpUtility.JavaScriptStringEncode(fileNames[i]) + ".jpg";
-						links.Add("<a id=\"imglnk" + i + "\" href=\"" + fullPath + "\" onclick=\"Img(" + i + "); return false;\">" + latestImgTime + "</a>");
+						List<string> fileNames = GetFileListSafer(fiBdl.FullName);
+						fileNames.Sort();
+						fileNames.Reverse();
+						for (int i = 0; i < fileNames.Count; i++)
+						{
+							DateTime dateTime;
+							string latestImgTime = GetImgTimeHtml(fileNames[i], out dateTime);
+							string fullPath = pathRoot + HttpUtility.JavaScriptStringEncode(fileNames[i]) + ".jpg";
+							links.Add("<a id=\"imglnk" + i + "\" href=\"" + fullPath + "\" onclick=\"Img(" + i + "); return false;\">" + latestImgTime + "</a>");
+						}
+					}
+					catch (NavigationException)
+					{
+						return "Server busy. Please reload this page later.";
 					}
 				}
 
@@ -159,21 +163,22 @@ namespace TimelapseCore
 			}
 			return sb.ToString();
 		}
-		public static string GetLatestPath(CameraSpec cs, out string latestImgTime)
+		public static string GetLatestPath(CameraSpec cs, out string latestImgTimeHtml, out DateTime lastImgDateTime)
 		{
-			return GetLatestPath(Globals.ImageArchiveDirectoryBase + cs.id, false, out latestImgTime);
+			return GetLatestPath(Globals.ImageArchiveDirectoryBase + cs.id, false, out latestImgTimeHtml, out lastImgDateTime);
 		}
-		private static string GetLatestPath(string path, bool imgPath, out string latestImgTime)
+		private static string GetLatestPath(string path, bool imgPath, out string latestImgTimeHtml, out DateTime lastImgDateTime)
 		{
 			DirectoryInfo di = new DirectoryInfo(path);
 			if (!di.Exists)
 			{
-				latestImgTime = "";
+				latestImgTimeHtml = "";
+				lastImgDateTime = DateTimeJavaScript.UnixEpoch;
 				return GetLinkPath(di);
 			}
-			return GetLatestPath(di, imgPath, out latestImgTime);
+			return GetLatestPath(di, imgPath, out latestImgTimeHtml, out lastImgDateTime);
 		}
-		private static string GetLatestPath(DirectoryInfo di, bool imgPath, out string latestImgTime)
+		private static string GetLatestPath(DirectoryInfo di, bool imgPath, out string latestImgTimeHtml, out DateTime lastImgDateTime)
 		{
 			DirectoryInfo[] dis = di.GetDirectories("*", SearchOption.TopDirectoryOnly);
 			if (dis != null && dis.Length > 0)
@@ -181,7 +186,7 @@ namespace TimelapseCore
 				Array.Sort(dis, new FileSystemInfoComparer());
 				// Get the first directory in the list. This is alphabetically the last one.
 				DirectoryInfo diLatest = dis[0];
-				return GetLatestPath(diLatest, imgPath, out latestImgTime);
+				return GetLatestPath(diLatest, imgPath, out latestImgTimeHtml, out lastImgDateTime);
 			}
 			else
 			{
@@ -192,38 +197,70 @@ namespace TimelapseCore
 					// Get the first bundle file in the list. This is alphabetically the last one.
 					FileInfo fiLatest = fis[0];
 					string dirPath = GetLinkPath(new DirectoryInfo(fiLatest.FullName.Remove(fiLatest.FullName.Length - fiLatest.Extension.Length)));
-					latestImgTime = "";
+					latestImgTimeHtml = "";
+					lastImgDateTime = DateTimeJavaScript.UnixEpoch;
 					if (!imgPath)
 						return dirPath;
 					else
 					{
-						List<string> fileNames = FileBundle.FileBundleManager.GetFileList(fiLatest.FullName);
+						List<string> fileNames = GetFileListSafer(fiLatest.FullName);
 						fileNames.Sort();
 						if (fileNames.Count == 0)
 							return "Empty Bundle";
 						else
 						{
-							latestImgTime = GetImgTimeHtml(fileNames[fileNames.Count - 1]);
+							latestImgTimeHtml = GetImgTimeHtml(fileNames[fileNames.Count - 1], out lastImgDateTime);
 							return dirPath + fileNames[fileNames.Count - 1];
 						}
 					}
 				}
 			}
-			latestImgTime = "";
+			latestImgTimeHtml = "";
+			lastImgDateTime = DateTimeJavaScript.UnixEpoch;
 			return GetLinkPath(di);
 		}
-		public static string GetImgTimeHtml(string bundleKey)
+		public static string GetImgTimeHtml(string bundleKey, out DateTime dateTime)
 		{
 			string tempF;
-			DateTime imgTimeStamp = Util.GetTimestampFromBundleKey(bundleKey, out tempF);
+			DateTime imgTimeStamp = dateTime = Util.GetTimestampFromBundleKey(bundleKey, out tempF);
 			if (string.IsNullOrEmpty(tempF))
 				return Util.GetDisplayableTime(imgTimeStamp, true);
 			else
 				return Util.GetDisplayableTime(imgTimeStamp, false) + " " + Util.Colorize(tempF);
 		}
-		public static string GetLatestImagePath(CameraSpec cs, out string latestImgTime)
+		public static string GetLatestImagePath(CameraSpec cs, out string latestImgTimeHtml, out DateTime latestImgDateTime)
 		{
-			return GetLatestPath(Globals.ImageArchiveDirectoryBase + cs.id, true, out latestImgTime);
+			return GetLatestPath(Globals.ImageArchiveDirectoryBase + cs.id, true, out latestImgTimeHtml, out latestImgDateTime);
+		}
+		private static List<string> GetFileListSafer(string path)
+		{
+			int tries = 0;
+			int tryLimit = 5;
+			while (tries < tryLimit)
+			{
+				try
+				{
+					return FileBundle.FileBundleManager.GetFileList(path);
+				}
+				catch (IOException ex)
+				{
+					if (++tries < tryLimit)
+					{
+						Thread.Sleep(1000 * (tries));
+						continue;
+					}
+					Logger.Debug(ex, "Tries: " + tries);
+					throw new NavigationException("Unable to access the file " + path);
+				}
+			}
+			return null;
+		}
+	}
+	public class NavigationException : Exception
+	{
+		public NavigationException(string message)
+			: base(message)
+		{
 		}
 	}
 }

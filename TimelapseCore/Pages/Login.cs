@@ -75,8 +75,8 @@ namespace TimelapseCore
 			$(""#errortext"").html('Logging in...');
 			var username = $(""#username"").val();
 			var password = $(""#password"").val() + ""justtomakethingsharder"";
-			setCookie('auth', escape(username) + ':' + escape(HashPW(password)), 1000);
-			top.location.href = " + (string.IsNullOrWhiteSpace(urlToLoad) ? "top.location.href" : "unescape('" + HttpUtility.JavaScriptStringEncode(HttpUtility.UrlEncode(urlToLoad)) + "')") + @";
+			setCookie('auth', encodeURIComponent(username) + ':' + encodeURIComponent(HashPW(password)), 1000);
+			top.location.href = " + (string.IsNullOrWhiteSpace(urlToLoad) ? "top.location.href" : "decodeURIComponent('" + HttpUtility.JavaScriptStringEncode(Uri.EscapeDataString(urlToLoad)) + "')") + @";
 		}
 		function HashPW(pw)
 		{
@@ -88,7 +88,7 @@ namespace TimelapseCore
 		{
 			var exdate = new Date();
 			exdate.setDate(exdate.getDate() + exdays);
-			var c_value = escape(value) + (exdays==null ? '' : '; expires=' + exdate.toUTCString() + '; path=/');
+			var c_value = encodeURIComponent(value) + (exdays==null ? '' : '; expires=' + exdate.toUTCString() + '; path=/');
 			document.cookie = c_name + '=' + c_value;
 		}
 	</script>";
