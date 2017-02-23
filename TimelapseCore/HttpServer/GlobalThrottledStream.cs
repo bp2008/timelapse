@@ -24,6 +24,7 @@ namespace SimpleHttp
 		/// </summary>
 		/// <param name="originalStream">The stream to throttle.</param>
 		/// <param name="ruleSetId">The numeric ID  of the throttling ruleset that will be applied to this stream.  If an invalid ruleSetId is provided, no throttling will be done.</param>
+		/// <param name="remoteIpAddress">The remote IP address that will be receiving this stream.</param>
 		public GlobalThrottledStream(Stream originalStream, int ruleSetId, uint remoteIpAddress)
 		{
 			this.originalStream = originalStream;

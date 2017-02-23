@@ -306,4 +306,15 @@ namespace TimelapseCore
 			return tempf + degrees;
 		}
 	}
+	public static class DateTimeJavaScript
+	{
+		public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		private static readonly long EpochTicks = UnixEpoch.Ticks;
+		private static readonly long TicksPerMillisecond = TimeSpan.TicksPerSecond / 1000;
+
+		public static long ToJavaScriptMilliseconds(this DateTime dt)
+		{
+			return (long)((dt.ToUniversalTime().Ticks - EpochTicks) / TicksPerMillisecond);
+		}
+	}
 }

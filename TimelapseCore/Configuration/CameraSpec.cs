@@ -13,6 +13,7 @@ namespace TimelapseCore.Configuration
 	public class CameraSpec : FieldSettable
 	{
 		[EditorName("Enabled")]
+		[EditorHint("Cameras cannot currently be disabled, so this has no meaning.")]
 		public bool enabled = false;
 		[EditorName("Name")]
 		[EditorHint("This is the name users will see.")]
@@ -43,7 +44,7 @@ namespace TimelapseCore.Configuration
 		[EditorCondition_FieldMustBe("type", CameraType.ThirdPartyHosted)]
 		[EditorName("Image path")]
 		[EditorHint("<br/>The absolute URL to the live/updating image on a 3rd party server.  The image will not be stored on this server, and therefore the primary purpose of the Third Party Hosted camera type is to allow 3rd party cameras to be added to the <a href=\"../all\">all</a> page.<br/><br/>If you include the text <b>%TIME%</b> it will be replaced by a value derived from the current system time where appropriate to prevent caching of the image.")]
-		public string path_3rdpartyimg = "/Images/ajax-loader.gif?%TIME%";
+		public string path_3rdpartyimg = "";
 		[EditorName("Camera Name Link")]
 		[EditorHint("<br/>The URL to load if the camera name is clicked on the all page.")]
 		public string path_3rdpartynamelink = "";
@@ -119,7 +120,7 @@ namespace TimelapseCore.Configuration
 		[EditorHint("If checked, the camera will be shown on the <a href=\"../all\">all</a> page.")]
 		public bool showOnAllPage = true;
 		[EditorName("\"All\" page overlay message")]
-		[EditorHint("<br/>A message that will be overlayed on the camera image on the <a href=\"../all\">all</a> page.  You might enter \"Offline\" here if the camera is no longer sending new imagery.")]
+		[EditorHint("<br/>A message that will be overlayed on the camera image on the <a href=\"../all\">all</a> page if the image hasn't updated in longer than 12 hours.  You might enter \"Offline\" here, or another descriptive message.")]
 		public string allPageOverlayMessage = "";
 
 		public int order = -1;

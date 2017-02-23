@@ -86,12 +86,6 @@ namespace SimpleHttp
 		/// </summary>
 		public string requestedPage;
 		/// <summary>
-		/// A string array containing the directories and the page name.
-		/// 
-		/// For example, if the URL was "/articles/science/moon.html?date=2011-10-21", pathParts would be { "articles", "science", "moon.html" }
-		/// </summary>
-		public string[] pathParts;
-		/// <summary>
 		/// A Dictionary mapping http header names to values. Names are all converted to lower case before being added to this Dictionary.
 		/// </summary>
 		public Dictionary<string, string> httpHeaders = new Dictionary<string, string>();
@@ -105,13 +99,22 @@ namespace SimpleHttp
 		/// </summary>
 		public SortedList<string, string> RawPostParams = new SortedList<string, string>();
 		/// <summary>
-		/// A SortedList mapping lower-case keys to values of parameters.  This list is populated parameters that were appended to the url (the query string).  e.g. if the url is "mypage.html?arg1=value1&arg2=value2", then there will be two parameters ("arg1" with value "value1" and "arg2" with value "value2"
+		/// A SortedList mapping lower-case keys to values of parameters.  This list is populated parameters that were appended to the url (the query string).  e.g. if the url is "mypage.html?arg1=value1&amp;arg2=value2", then there will be two parameters ("arg1" with value "value1" and "arg2" with value "value2")
 		/// </summary>
 		public SortedList<string, string> QueryString = new SortedList<string, string>();
 		/// <summary>
-		/// A SortedList mapping keys to values of parameters.  No character case conversion is applied in this list.  This list is populated parameters that were appended to the url (the query string).  e.g. if the url is "mypage.html?arg1=value1&arg2=value2", then there will be two parameters ("arg1" with value "value1" and "arg2" with value "value2"
+		/// A SortedList mapping keys to values of parameters.  No character case conversion is applied in this list.  This list is populated parameters that were appended to the url (the query string).  e.g. if the url is "mypage.html?arg1=value1&amp;arg2=value2", then there will be two parameters ("arg1" with value "value1" and "arg2" with value "value2")
 		/// </summary>
 		public SortedList<string, string> RawQueryString = new SortedList<string, string>();
+
+		/// <summary>
+		/// The mimetype of the posted content.
+		/// </summary>
+		public string postContentType = "";
+		/// <summary>
+		/// The raw posted content as a string, populated only if the mimetype was "application/x-www-form-urlencoded"
+		/// </summary>
+		public string postFormDataRaw = "";
 
 		/// <summary>
 		/// A flag that is set when WriteSuccess(), WriteFailure(), or WriteRedirect() is called.
@@ -248,22 +251,29 @@ namespace SimpleHttp
 		private string streamReadLine(Stream inputStream)
 		{
 			int next_char;
+			bool endOfStream = false;
 			StringBuilder data = new StringBuilder();
 			while (true)
 			{
 				next_char = inputStream.ReadByte();
 				if (next_char == '\n') { break; }
 				if (next_char == '\r') { continue; }
-				if (next_char == -1) { break; };
+				if (next_char == -1)
+				{
+					endOfStream = true;
+					break;
+				};
 				data.Append(Convert.ToChar(next_char));
 			}
+			if (endOfStream && data.Length == 0)
+				return null;
 			return data.ToString();
 		}
 
 		/// <summary>
 		/// Processes the request.
 		/// </summary>
-		internal void process(object objParameter)
+		internal void process()
 		{
 			Stream tcpStream = null;
 			try
@@ -300,12 +310,14 @@ namespace SimpleHttp
 					{
 						if (http_method.Equals("GET"))
 						{
-							SimpleHttpLogger.LogRequest(DateTime.Now, this.RemoteIPAddress, "GET", request_url.OriginalString);
+							if (shouldLogRequestsToFile())
+								SimpleHttpLogger.LogRequest(DateTime.Now, this.RemoteIPAddress, "GET", request_url.OriginalString);
 							handleGETRequest();
 						}
 						else if (http_method.Equals("POST"))
 						{
-							SimpleHttpLogger.LogRequest(DateTime.Now, this.RemoteIPAddress, "POST", request_url.OriginalString);
+							if (shouldLogRequestsToFile())
+								SimpleHttpLogger.LogRequest(DateTime.Now, this.RemoteIPAddress, "POST", request_url.OriginalString);
 							handlePOSTRequest();
 						}
 					}
@@ -320,7 +332,8 @@ namespace SimpleHttp
 				{
 					if (!isOrdinaryDisconnectException(e))
 						SimpleHttpLogger.LogVerbose(e);
-					SimpleHttpLogger.LogRequest(DateTime.Now, this.RemoteIPAddress, "FAIL", request_url.OriginalString);
+					if (shouldLogRequestsToFile())
+						SimpleHttpLogger.LogRequest(DateTime.Now, this.RemoteIPAddress, "FAIL", request_url.OriginalString);
 					this.writeFailure("400 Bad Request", "The request cannot be fulfilled due to bad syntax.");
 				}
 				outputStream.Flush();
@@ -363,6 +376,10 @@ namespace SimpleHttp
 			}
 			return false;
 		}
+		private bool shouldLogRequestsToFile()
+		{
+			return srv.shouldLogRequestsToFile();
+		}
 		// The following function was the start of an attempt to support basic authentication, but I have since decided against it as basic authentication is very insecure.
 		//private NetworkCredential ParseAuthorizationCredentials()
 		//{
@@ -382,6 +399,8 @@ namespace SimpleHttp
 		private void parseRequest()
 		{
 			string request = streamReadLine(inputStream);
+			if (request == null)
+				throw new Exception("End of stream");
 			string[] tokens = request.Split(' ');
 			if (tokens.Length != 3)
 				throw new Exception("invalid http request line: " + request);
@@ -391,6 +410,8 @@ namespace SimpleHttp
 				request_url = new Uri(tokens[1]);
 			else
 				request_url = new Uri(base_uri_this_server, tokens[1]);
+
+			requestedPage = request_url.AbsolutePath.StartsWith("/") ? request_url.AbsolutePath.Substring(1) : request_url.AbsolutePath;
 
 			http_protocol_versionstring = tokens[2];
 		}
@@ -403,6 +424,8 @@ namespace SimpleHttp
 			String line;
 			while ((line = streamReadLine(inputStream)) != "")
 			{
+				if (line == null)
+					throw new Exception("End of stream");
 				int separator = line.IndexOf(':');
 				if (separator == -1)
 					throw new Exception("invalid http header line: " + line);
@@ -445,61 +468,63 @@ namespace SimpleHttp
 			try
 			{
 				int content_len = 0;
-				MemoryStream ms = new MemoryStream();
-				string content_length_str = GetHeaderValue("Content-Length");
-				if (!string.IsNullOrWhiteSpace(content_length_str))
+				using (MemoryStream ms = new MemoryStream())
 				{
-					if (int.TryParse(content_length_str, out content_len))
+					string content_length_str = GetHeaderValue("Content-Length");
+					if (!string.IsNullOrWhiteSpace(content_length_str))
 					{
-						if (content_len > MAX_POST_SIZE)
+						if (int.TryParse(content_length_str, out content_len))
 						{
-							this.writeFailure("413 Request Entity Too Large", "Request Too Large");
-							SimpleHttpLogger.LogVerbose("POST Content-Length(" + content_len + ") too big for this simple server.  Server can handle up to " + MAX_POST_SIZE);
-							return;
-						}
-						byte[] buf = new byte[BUF_SIZE];
-						int to_read = content_len;
-						while (to_read > 0)
-						{
-							int numread = this.inputStream.Read(buf, 0, Math.Min(BUF_SIZE, to_read));
-							if (numread == 0)
+							if (content_len > MAX_POST_SIZE)
 							{
-								if (to_read == 0)
-									break;
-								else
-								{
-									SimpleHttpLogger.LogVerbose("client disconnected during post");
-									return;
-								}
+								this.writeFailure("413 Request Entity Too Large", "Request Too Large");
+								SimpleHttpLogger.LogVerbose("POST Content-Length(" + content_len + ") too big for this simple server.  Server can handle up to " + MAX_POST_SIZE);
+								return;
 							}
-							to_read -= numread;
-							ms.Write(buf, 0, numread);
+							byte[] buf = new byte[BUF_SIZE];
+							int to_read = content_len;
+							while (to_read > 0)
+							{
+								int numread = this.inputStream.Read(buf, 0, Math.Min(BUF_SIZE, to_read));
+								if (numread == 0)
+								{
+									if (to_read == 0)
+										break;
+									else
+									{
+										SimpleHttpLogger.LogVerbose("client disconnected during post");
+										return;
+									}
+								}
+								to_read -= numread;
+								ms.Write(buf, 0, numread);
+							}
+							ms.Seek(0, SeekOrigin.Begin);
 						}
-						ms.Seek(0, SeekOrigin.Begin);
 					}
-				}
-				else
-				{
-					this.writeFailure("411 Length Required", "The request did not specify the length of its content.");
-					SimpleHttpLogger.LogVerbose("The request did not specify the length of its content.  This server requires that all POST requests include a Content-Length header.");
-					return;
-				}
+					else
+					{
+						this.writeFailure("411 Length Required", "The request did not specify the length of its content.");
+						SimpleHttpLogger.LogVerbose("The request did not specify the length of its content.  This server requires that all POST requests include a Content-Length header.");
+						return;
+					}
 
-				string contentType = GetHeaderValue("Content-Type");
-				if (contentType != null && contentType.Contains("application/x-www-form-urlencoded"))
-				{
-					StreamReader sr = new StreamReader(ms);
-					string all = sr.ReadToEnd();
-					sr.Close();
+					postContentType = GetHeaderValue("Content-Type");
+					if (postContentType != null && postContentType.Contains("application/x-www-form-urlencoded"))
+					{
+						StreamReader sr = new StreamReader(ms);
+						postFormDataRaw = sr.ReadToEnd();
+						sr.Close();
 
-					RawPostParams = ParseQueryStringArguments(all, false, true);
-					PostParams = ParseQueryStringArguments(all, false);
+						RawPostParams = ParseQueryStringArguments(postFormDataRaw, false, true);
+						PostParams = ParseQueryStringArguments(postFormDataRaw, false);
 
-					srv.handlePOSTRequest(this, null);
-				}
-				else
-				{
-					srv.handlePOSTRequest(this, new StreamReader(ms));
+						srv.handlePOSTRequest(this, null);
+					}
+					else
+					{
+						srv.handlePOSTRequest(this, new StreamReader(ms));
+					}
 				}
 			}
 			finally
@@ -518,6 +543,8 @@ namespace SimpleHttp
 		/// </summary>
 		/// <param name="contentType">The MIME type of your response.</param>
 		/// <param name="contentLength">(OPTIONAL) The length of your response, in bytes, if you know it.</param>
+		/// <param name="responseCode">(OPTIONAL) The response code and optional status string.</param>
+		/// <param name="additionalHeaders">(OPTIONAL) Additional headers to include in the response.</param>
 		public virtual void writeSuccess(string contentType = "text/html", long contentLength = -1, string responseCode = "200 OK", List<KeyValuePair<string, string>> additionalHeaders = null)
 		{
 			responseWritten = true;
@@ -570,6 +597,7 @@ namespace SimpleHttp
 		/// Gets the value of the header, or null if the header does not exist.  The name is case insensitive.
 		/// </summary>
 		/// <param name="name">The case insensitive name of the header to get the value of.</param>
+		/// <param name="defaultValue">The default value to return, in case the value did not exist.</param>
 		/// <returns>The value of the header, or null if the header did not exist.</returns>
 		public string GetHeaderValue(string name, string defaultValue = null)
 		{
@@ -586,6 +614,7 @@ namespace SimpleHttp
 		/// </summary>
 		/// <param name="queryString"></param>
 		/// <param name="requireQuestionMark"></param>
+		/// <param name="preserveKeyCharacterCase">(Optional) If true, query string argument keys will be case sensitive.</param>
 		/// <returns></returns>
 		protected static SortedList<string, string> ParseQueryStringArguments(string queryString, bool requireQuestionMark = true, bool preserveKeyCharacterCase = false)
 		{
@@ -608,14 +637,14 @@ namespace SimpleHttp
 				string[] argument = parts[i].Split(new char[] { '=' });
 				if (argument.Length == 2)
 				{
-					string key = HttpUtility.UrlDecode(argument[0]);
+					string key = Uri.UnescapeDataString(argument[0].Replace('+',' '));
 					if (!preserveKeyCharacterCase)
 						key = key.ToLower();
 					string existingValue;
 					if (arguments.TryGetValue(key, out existingValue))
-						arguments[key] += "," + HttpUtility.UrlDecode(argument[1]);
+						arguments[key] += "," + Uri.UnescapeDataString(argument[1].Replace('+', ' '));
 					else
-						arguments[key] = HttpUtility.UrlDecode(argument[1]);
+						arguments[key] = Uri.UnescapeDataString(argument[1].Replace('+', ' '));
 				}
 			}
 			if (hash != null)
@@ -636,6 +665,7 @@ namespace SimpleHttp
 		/// Returns the value of the Query String parameter with the specified key.
 		/// </summary>
 		/// <param name="key">A case insensitive key.</param>
+		/// <param name="defaultValue">The default value to return, in case the value did not exist or was not compatible with the data type.</param>
 		/// <returns>The value of the key, or [defaultValue] if the key does not exist or has no suitable value.</returns>
 		public int GetIntParam(string key, int defaultValue = 0)
 		{
@@ -645,6 +675,7 @@ namespace SimpleHttp
 		/// Returns the value of the Query String parameter with the specified key.
 		/// </summary>
 		/// <param name="key">A case insensitive key.</param>
+		/// <param name="defaultValue">The default value to return, in case the value did not exist or was not compatible with the data type.</param>
 		/// <returns>The value of the key, or [defaultValue] if the key does not exist or has no suitable value.</returns>
 		public double GetDoubleParam(string key, int defaultValue = 0)
 		{
@@ -677,6 +708,7 @@ namespace SimpleHttp
 		/// Returns the value of the Query String parameter with the specified key.
 		/// </summary>
 		/// <param name="key">A case insensitive key.</param>
+		/// <param name="defaultValue">The default value to return, in case the value did not exist or was not compatible with the data type.</param>
 		/// <returns>The value of the key, or [defaultValue] if the key does not exist or has no suitable value.</returns>
 		public int GetQSIntParam(string key, int defaultValue = 0)
 		{
@@ -691,6 +723,7 @@ namespace SimpleHttp
 		/// Returns the value of the Query String parameter with the specified key.
 		/// </summary>
 		/// <param name="key">A case insensitive key.</param>
+		/// <param name="defaultValue">The default value to return, in case the value did not exist or was not compatible with the data type.</param>
 		/// <returns>The value of the key, or [defaultValue] if the key does not exist or has no suitable value.</returns>
 		public double GetQSDoubleParam(string key, double defaultValue = 0)
 		{
@@ -731,6 +764,7 @@ namespace SimpleHttp
 		/// Returns the value of a parameter sent via POST with MIME type "application/x-www-form-urlencoded".
 		/// </summary>
 		/// <param name="key">A case insensitive key.</param>
+		/// <param name="defaultValue">The default value to return, in case the value did not exist or was not compatible with the data type.</param>
 		/// <returns>The value of the key, or [defaultValue] if the key does not exist or has no suitable value.</returns>
 		public int GetPostIntParam(string key, int defaultValue = 0)
 		{
@@ -745,6 +779,7 @@ namespace SimpleHttp
 		/// Returns the value of a parameter sent via POST with MIME type "application/x-www-form-urlencoded".
 		/// </summary>
 		/// <param name="key">A case insensitive key.</param>
+		/// <param name="defaultValue">The default value to return, in case the value did not exist or was not compatible with the data type.</param>
 		/// <returns>The value of the key, or [defaultValue] if the key does not exist or has no suitable value.</returns>
 		public double GetPostDoubleParam(string key, double defaultValue = 0)
 		{
@@ -768,18 +803,69 @@ namespace SimpleHttp
 			return false;
 		}
 		#endregion
+
+		/// <summary>
+		/// Polls the socket to see if it has closed.
+		/// </summary>
+		/// <returns></returns>
+		public bool CheckIfStillConnected()
+		{
+			//outputStream.Write(" ");
+			//outputStream.Flush(); // This will throw an exception if disconnected.
+			//return true;
+			if (!tcpClient.Connected)
+				return false;
+			bool readable = tcpClient.Client.Poll(0, System.Net.Sockets.SelectMode.SelectRead);
+			if (readable)
+			{
+				// data is available for reading OR connection is closed.
+				byte[] buffer = new byte[1];
+				if (tcpClient.Client.Receive(buffer, SocketFlags.Peek) == 0)
+					return false; // No data available, connection must be closed
+				// Data was available, connection may not be closed.
+				bool writable = tcpClient.Client.Poll(0, System.Net.Sockets.SelectMode.SelectWrite);
+				bool errored = tcpClient.Client.Poll(0, System.Net.Sockets.SelectMode.SelectError);
+				return writable && !errored;
+			}
+			else
+			{
+				return true; // The read poll returned false, so the connection is supposedly open with no data available to read, which is the normal state.
+			}
+		}
 	}
 
 	public abstract class HttpServer
 	{
 		/// <summary>
-		/// If > -1, the server is listening for http connections on this port.
+		/// If > -1, the server was told to listen for http connections on this port.  Port 0 causes the socket library to choose its own port.
 		/// </summary>
 		protected readonly int port;
 		/// <summary>
-		/// If > -1, the server is listening for https connections on this port.
+		/// If > -1, the server was told to listen for https connections on this port.  Port 0 causes the socket library to choose its own port.
 		/// </summary>
 		protected readonly int secure_port;
+		protected int actual_port_http = -1;
+		protected int actual_port_https = -1;
+		/// <summary>
+		/// The actual port the http server is listening on.  Will be -1 if not listening.
+		/// </summary>
+		public int Port_http
+		{
+			get
+			{
+				return actual_port_http;
+			}
+		}
+		/// <summary>
+		/// The actual port the http server is listening on.  Will be -1 if not listening.
+		/// </summary>
+		public int Port_https
+		{
+			get
+			{
+				return actual_port_https;
+			}
+		}
 		protected volatile bool stopRequested = false;
 		private X509Certificate2 ssl_certificate;
 		private Thread thrHttp;
@@ -789,6 +875,7 @@ namespace SimpleHttp
 
 		internal List<byte[]> localIPv4Addresses = new List<byte[]>();
 
+		public SimpleThreadPool pool;
 		/// <summary>
 		/// 
 		/// </summary>
@@ -797,6 +884,8 @@ namespace SimpleHttp
 		/// <param name="cert">(Optional) Certificate to use for https connections.  If null and an httpsPort was specified, a certificate is automatically created if necessary and loaded from "SimpleHttpServer-SslCert.pfx" in the same directory that the current executable is located in.</param>
 		public HttpServer(int port, int httpsPort = -1, X509Certificate2 cert = null)
 		{
+			pool = new SimpleThreadPool("SimpleHttpServer");
+
 			this.port = port;
 			this.secure_port = httpsPort;
 			this.ssl_certificate = cert;
@@ -869,108 +958,119 @@ namespace SimpleHttp
 		/// </summary>
 		private void listen(object param)
 		{
-			bool isSecureListener = (bool)param;
-
-			int errorCount = 0;
-			DateTime lastError = DateTime.Now;
-
-			TcpListener listener = null;
-
-			while (!stopRequested)
+			try
 			{
-				bool threwExceptionOuter = false;
-				try
+				bool isSecureListener = (bool)param;
+
+				int errorCount = 0;
+				DateTime lastError = DateTime.Now;
+
+				TcpListener listener = null;
+
+				while (!stopRequested)
 				{
-					listener = new TcpListener(IPAddress.Any, isSecureListener ? secure_port : port);
-					if (isSecureListener)
-						secureListener = listener;
-					else
-						unsecureListener = listener;
-					listener.Start();
-					while (!stopRequested)
-					{
-						int innerErrorCount = 0;
-						DateTime innerLastError = DateTime.Now;
-						try
-						{
-							TcpClient s = listener.AcceptTcpClient();
-							if (s.ReceiveTimeout < 10000)
-								s.ReceiveTimeout = 10000;
-							if (s.SendTimeout < 10000)
-								s.SendTimeout = 10000;
-							int workerThreads, completionPortThreads;
-							ThreadPool.GetAvailableThreads(out workerThreads, out completionPortThreads);
-							// Here is where we could enforce a minimum number of free pool threads, 
-							// if we wanted to ensure better performance.
-							if (workerThreads > 0)
-							{
-								HttpProcessor processor = new HttpProcessor(s, this, isSecureListener ? ssl_certificate : null);
-								ThreadPool.QueueUserWorkItem(processor.process);
-							}
-							else
-							{
-								try
-								{
-									StreamWriter outputStream = new StreamWriter(s.GetStream());
-									outputStream.WriteLine("HTTP/1.1 503 Service Unavailable");
-									outputStream.WriteLine("Connection: close");
-									outputStream.WriteLine("");
-									outputStream.WriteLine("Server too busy");
-								}
-								catch (ThreadAbortException ex)
-								{
-									throw ex;
-								}
-							}
-						}
-						catch (ThreadAbortException ex)
-						{
-							throw ex;
-						}
-						catch (Exception ex)
-						{
-							if (!ex.Message.Contains("A blocking operation was interrupted by a call to WSACancelBlockingCall"))
-							{
-								if (DateTime.Now.Hour != innerLastError.Hour || DateTime.Now.DayOfYear != innerLastError.DayOfYear)
-								{
-									innerLastError = DateTime.Now;
-									innerErrorCount = 0;
-								}
-								if (++innerErrorCount > 10)
-									throw ex;
-								SimpleHttpLogger.Log(ex, "Inner Error count this hour: " + innerErrorCount);
-							}
-							Thread.Sleep(1);
-						}
-					}
-				}
-				catch (ThreadAbortException) { stopRequested = true; }
-				catch (Exception ex)
-				{
-					if (DateTime.Now.DayOfYear != lastError.DayOfYear || DateTime.Now.Year != lastError.Year)
-					{
-						lastError = DateTime.Now;
-						errorCount = 0;
-					}
-					if (++errorCount > 100)
-						throw ex;
-					SimpleHttpLogger.Log(ex, "Restarting listener. Error count today: " + errorCount);
-					threwExceptionOuter = true;
-				}
-				finally
-				{
+					bool threwExceptionOuter = false;
 					try
 					{
-						if (listener != null)
+						listener = new TcpListener(IPAddress.Any, isSecureListener ? secure_port : port);
+						if (isSecureListener)
+							secureListener = listener;
+						else
+							unsecureListener = listener;
+						listener.Start();
+						if (isSecureListener)
+							actual_port_https = ((IPEndPoint)listener.LocalEndpoint).Port;
+						else
+							actual_port_http = ((IPEndPoint)listener.LocalEndpoint).Port;
+						while (!stopRequested)
 						{
-							listener.Stop();
-							if (threwExceptionOuter)
-								Thread.Sleep(1000);
+							int innerErrorCount = 0;
+							DateTime innerLastError = DateTime.Now;
+							try
+							{
+								TcpClient s = listener.AcceptTcpClient();
+								if (s.ReceiveTimeout < 10000)
+									s.ReceiveTimeout = 10000;
+								if (s.SendTimeout < 10000)
+									s.SendTimeout = 10000;
+								HttpProcessor processor = new HttpProcessor(s, this, isSecureListener ? ssl_certificate : null);
+								pool.Enqueue(processor.process);
+								//	try
+								//	{
+								//		StreamWriter outputStream = new StreamWriter(s.GetStream());
+								//		outputStream.WriteLine("HTTP/1.1 503 Service Unavailable");
+								//		outputStream.WriteLine("Connection: close");
+								//		outputStream.WriteLine("");
+								//		outputStream.WriteLine("Server too busy");
+								//	}
+								//	catch (ThreadAbortException ex)
+								//	{
+								//		throw ex;
+								//	}
+							}
+							catch (ThreadAbortException ex)
+							{
+								throw ex;
+							}
+							catch (Exception ex)
+							{
+								if (ex.Message == "A blocking operation was interrupted by a call to WSACancelBlockingCall")
+								{
+								}
+								else
+								{
+									if (DateTime.Now.Hour != innerLastError.Hour || DateTime.Now.DayOfYear != innerLastError.DayOfYear)
+									{
+										innerLastError = DateTime.Now;
+										innerErrorCount = 0;
+									}
+									if (++innerErrorCount > 10)
+										throw ex;
+									SimpleHttpLogger.Log(ex, "Inner Error count this hour: " + innerErrorCount);
+									Thread.Sleep(1);
+								}
+							}
 						}
 					}
 					catch (ThreadAbortException) { stopRequested = true; }
-					catch (Exception) { }
+					catch (Exception ex)
+					{
+						if (ex.Message == "A blocking operation was interrupted by a call to WSACancelBlockingCall")
+						{
+						}
+						else
+						{
+							if (DateTime.Now.DayOfYear != lastError.DayOfYear || DateTime.Now.Year != lastError.Year)
+							{
+								lastError = DateTime.Now;
+								errorCount = 0;
+							}
+							if (++errorCount > 100)
+								throw ex;
+							SimpleHttpLogger.Log(ex, "Restarting listener. Error count today: " + errorCount);
+							threwExceptionOuter = true;
+						}
+					}
+					finally
+					{
+						try
+						{
+							if (listener != null)
+							{
+								listener.Stop();
+								if (threwExceptionOuter)
+									Thread.Sleep(1000);
+							}
+						}
+						catch (ThreadAbortException) { stopRequested = true; }
+						catch (Exception) { }
+					}
 				}
+			}
+			catch (ThreadAbortException) { stopRequested = true; }
+			catch (Exception ex)
+			{
+				SimpleHttpLogger.Log(ex, "Exception thrown in outer loop.  Exiting listener.");
 			}
 		}
 
@@ -993,6 +1093,14 @@ namespace SimpleHttp
 			if (stopRequested)
 				return;
 			stopRequested = true;
+			try
+			{
+				pool.Stop();
+			}
+			catch (Exception ex)
+			{
+				SimpleHttpLogger.Log(ex);
+			}
 			if (unsecureListener != null)
 				try
 				{
@@ -1099,6 +1207,11 @@ namespace SimpleHttp
 		/// This is called when the server is stopping.  Perform any cleanup work here.
 		/// </summary>
 		public abstract void stopServer();
+
+		public virtual bool shouldLogRequestsToFile()
+		{
+			return false;
+		}
 	}
 	#region Helper Classes
 	public class Cookie
@@ -1114,7 +1227,7 @@ namespace SimpleHttp
 			this.expire = expire;
 		}
 	}
-	public class Cookies
+	public class Cookies : IEnumerable<Cookie>
 	{
 		SortedList<string, Cookie> cookieCollection = new SortedList<string, Cookie>();
 		/// <summary>
@@ -1198,6 +1311,23 @@ namespace SimpleHttp
 			return cookies;
 		}
 
+		#region IEnumerable<Cookie> Members
+
+		IEnumerator<Cookie> IEnumerable<Cookie>.GetEnumerator()
+		{
+			return cookieCollection.Values.GetEnumerator();
+		}
+
+		#endregion
+
+		#region IEnumerable Members
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return cookieCollection.Values.GetEnumerator();
+		}
+
+		#endregion
 		public void UpdateHttpCookieCollection(HttpCookieCollection httpCookieCollection)
 		{
 			foreach (Cookie cookie in cookieCollection.Values)
@@ -1239,7 +1369,7 @@ namespace SimpleHttp
 	public static class SimpleHttpLogger
 	{
 		private static ILogger logger = null;
-		private static bool logVerbose = true;
+		private static bool logVerbose = false;
 		/// <summary>
 		/// (OPTIONAL) Keeps a static reference to the specified ILogger and uses it for http server error logging.  Only one logger can be registered at a time; attempting to register a second logger simply replaces the first one.
 		/// </summary>
@@ -1291,6 +1421,7 @@ namespace SimpleHttp
 		}
 		internal static void LogRequest(DateTime time, string remoteHost, string requestMethod, string requestedUrl)
 		{
+			LogVerbose(remoteHost + "\t" + requestMethod + "\t" + requestedUrl);
 			logger.LogRequest(time, time.ToString("yyyy-MM-dd hh:mm:ss tt") + ":\t" + remoteHost + "\t" + requestMethod + "\t" + requestedUrl);
 		}
 	}
