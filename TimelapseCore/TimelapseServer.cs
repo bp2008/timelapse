@@ -113,6 +113,34 @@ namespace TimelapseCore
 				{
 					p.writeFailure();
 				}
+				else if (requestedPage == "GetFileListUrls")
+				{
+					if (HandlePublicServiceDisabled(p))
+						return;
+					CameraSpec cs = TimelapseWrapper.cfg.GetCameraSpec(p.GetParam("cam"));
+					if (cs == null || cs.type != CameraType.FTP)
+						p.writeFailure("400 Bad Request");
+					else
+					{
+						string path = p.GetParam("path");
+						try
+						{
+							string response = Navigation.GetFileListUrls(cs, path);
+							p.writeSuccess("text/plain");
+							p.outputStream.Write(response);
+						}
+						catch (NavigationException)
+						{
+							p.writeFailure("503 Service Unavailable");
+							p.outputStream.Write("");
+						}
+						catch (Exception ex)
+						{
+							Logger.Debug(ex);
+							p.writeFailure("500 Internal Server Error");
+						}
+					}
+				}
 				else
 				{
 					CameraSpec cs = null;

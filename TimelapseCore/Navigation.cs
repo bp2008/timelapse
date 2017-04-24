@@ -143,6 +143,32 @@ namespace TimelapseCore
 
 			return sb.ToString();
 		}
+		public static string GetFileListUrls(CameraSpec cs, string path)
+		{
+			StringBuilder sb = new StringBuilder();
+			DirectoryInfo diArg = new DirectoryInfo(Globals.ImageArchiveDirectoryBase + cs.id + "/" + path);
+			FileInfo fiBdl = new FileInfo(diArg.Parent.FullName + "/" + diArg.Name + ".bdl");
+
+			if (!fiBdl.Exists)
+				throw new Exception("File does not exist");
+			else
+			{
+				List<string> links = new List<string>();
+
+				string pathRoot = GetLinkPath(diArg, false);
+
+				List<string> fileNames = GetFileListSafer(fiBdl.FullName);
+				fileNames.Sort();
+				for (int i = 0; i < fileNames.Count; i++)
+				{
+					//DateTime dateTime;
+					//string latestImgTime = GetImgTimeHtml(fileNames[i], out dateTime);
+					string fullPath = pathRoot + fileNames[i] + ".jpg";
+					links.Add(fullPath);
+				}
+				return string.Join("\n", links);
+			}
+		}
 		private static string GetLinkPath(DirectoryInfo di, bool removeCameraId = true)
 		{
 			Stack<string> stk = new Stack<string>();
