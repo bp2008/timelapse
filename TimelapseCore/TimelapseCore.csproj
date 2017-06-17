@@ -109,8 +109,8 @@
   <PropertyGroup>
     <PostBuildEvent>mkdir -p "$(SolutionDir)Release"
 copy /Y /B "$(TargetDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Release\$(TargetName)$(TargetExt)"
-copy /Y /B "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Release\$(TargetName).pdb"
-copy /Y /B "$(TargetDir)Ionic.Zip.dll" "$(SolutionDir)Release\Ionic.Zip.dll"</PostBuildEvent>
+copy /Y /B "$(TargetDir)Ionic.Zip.dll" "$(SolutionDir)Release\Ionic.Zip.dll"
+copy /Y /B "$(TargetDir)BPUtil.dll" "$(SolutionDir)Release\BPUtil.dll"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
