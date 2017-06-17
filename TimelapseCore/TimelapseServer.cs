@@ -5,13 +5,14 @@ using System.Text;
 using System.Threading;
 using System.IO;
 using System.Diagnostics;
-using SimpleHttp;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Net.Sockets;
 using TimelapseCore.Configuration;
 using System.Net;
 using System.Security.AccessControl;
+using BPUtil.SimpleHttp;
+using BPUtil;
 
 namespace TimelapseCore
 {
@@ -196,7 +197,7 @@ namespace TimelapseCore
 								string path = cs.id + "/" + latestImagePathPart;
 
 								List<KeyValuePair<string, string>> headers = GetCacheEtagHeaders(TimeSpan.Zero, path);
-								FileInfo imgFile = new FileInfo(Globals.ImageArchiveDirectoryBase + path);
+								FileInfo imgFile = new FileInfo(TimelapseGlobals.ImageArchiveDirectoryBase + path);
 								headers.Add(new KeyValuePair<string, string>("Content-Disposition", "inline; filename=\"" + cs.name + " " + imgFile.Name.Substring(0, imgFile.Name.Length - imgFile.Extension.Length) + ".jpg\""));
 
 								if (path == p.GetHeaderValue("if-none-match"))
@@ -218,7 +219,7 @@ namespace TimelapseCore
 								}
 
 								List<KeyValuePair<string, string>> headers = GetCacheEtagHeaders(TimeSpan.FromDays(365), requestedPage);
-								FileInfo imgFile = new FileInfo(Globals.ImageArchiveDirectoryBase + requestedPage);
+								FileInfo imgFile = new FileInfo(TimelapseGlobals.ImageArchiveDirectoryBase + requestedPage);
 								headers.Add(new KeyValuePair<string, string>("Content-Disposition", "inline; filename=\"" + cs.name + " " + imgFile.Name.Substring(0, imgFile.Name.Length - imgFile.Extension.Length) + ".jpg\""));
 
 								if (requestedPage == p.GetHeaderValue("if-none-match"))
@@ -238,7 +239,7 @@ namespace TimelapseCore
 					else
 					{
 						#region www
-						DirectoryInfo WWWDirectory = new DirectoryInfo(Globals.WWWDirectoryBase);
+						DirectoryInfo WWWDirectory = new DirectoryInfo(TimelapseGlobals.WWWDirectoryBase);
 						string wwwDirectoryBase = WWWDirectory.FullName.Replace('\\', '/').TrimEnd('/') + '/';
 						FileInfo fi = new FileInfo(wwwDirectoryBase + requestedPage);
 						string targetFilePath = fi.FullName.Replace('\\', '/');
@@ -311,7 +312,7 @@ namespace TimelapseCore
 							{
 								html = html.Replace("%REMOTEIP%", p.RemoteIPAddress);
 								html = html.Replace("%SYSTEM_NAME%", TimelapseWrapper.cfg.options.systemName);
-								html = html.Replace("%APP_VERSION%", Globals.Version);
+								html = html.Replace("%APP_VERSION%", TimelapseGlobals.Version);
 							}
 							catch (Exception ex)
 							{
@@ -527,7 +528,7 @@ namespace TimelapseCore
 
 		private byte[] GetImageData(string path)
 		{
-			FileInfo fi = new FileInfo(Globals.ImageArchiveDirectoryBase + path);
+			FileInfo fi = new FileInfo(TimelapseGlobals.ImageArchiveDirectoryBase + path);
 			string fileName = fi.Name.EndsWith(".jpg") ? fi.Name.Remove(fi.Name.Length - ".jpg".Length) : fi.Name;
 			FileInfo bundleFile = new FileInfo(fi.Directory.FullName.TrimEnd('/', '\\') + ".bdl");
 			if (bundleFile.Exists)
@@ -795,7 +796,7 @@ namespace TimelapseCore
 			}
 		}
 
-		public override void stopServer()
+		protected override void stopServer()
 		{
 		}
 		public override bool shouldLogRequestsToFile()

@@ -52,13 +52,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TimelapseCore\TimelapseCore.csproj">
-      <Project>{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}</Project>
-      <Name>TimelapseCore</Name>
-    </ProjectReference>
+    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <ProjectReference Include="..\TimelapseCore\TimelapseCore.csproj">
+      <Project>{31f9aafc-3f9f-4697-804d-dbc31fc0f355}</Project>
+      <Name>TimelapseCore</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

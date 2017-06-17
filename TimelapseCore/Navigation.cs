@@ -6,6 +6,7 @@ using System.IO;
 using TimelapseCore.Configuration;
 using System.Web;
 using System.Threading;
+using BPUtil;
 
 namespace TimelapseCore
 {
@@ -24,7 +25,7 @@ namespace TimelapseCore
 					int month = int.Parse(parts[1]);
 					int day = int.Parse(parts[2]);
 					// The goal is to find the next day that has images.
-					DirectoryInfo diRoot = new DirectoryInfo(Globals.ImageArchiveDirectoryBase + cs.id);
+					DirectoryInfo diRoot = new DirectoryInfo(TimelapseGlobals.ImageArchiveDirectoryBase + cs.id);
 					List<DateTime> monthsAvailable = new List<DateTime>();
 					foreach (DirectoryInfo di in diRoot.GetDirectories("*", SearchOption.AllDirectories))
 					{
@@ -42,7 +43,7 @@ namespace TimelapseCore
 						while (thisMonth == d.Month)
 						{
 							string testPath = d.Year + "/" + d.Month.ToString().PadLeft(2, '0') + "/" + d.Day.ToString().PadLeft(2, '0');
-							FileInfo fiBdl = new FileInfo(Globals.ImageArchiveDirectoryBase + cs.id + "/" + testPath + ".bdl");
+							FileInfo fiBdl = new FileInfo(TimelapseGlobals.ImageArchiveDirectoryBase + cs.id + "/" + testPath + ".bdl");
 							if (fiBdl.Exists)
 							{
 								List<string> fileNames = GetFileListSafer(fiBdl.FullName);
@@ -63,7 +64,7 @@ namespace TimelapseCore
 		public static string GetNavHtml(CameraSpec cs, string path)
 		{
 			StringBuilder sb = new StringBuilder();
-			DirectoryInfo diArg = new DirectoryInfo(Globals.ImageArchiveDirectoryBase + cs.id + "/" + path);
+			DirectoryInfo diArg = new DirectoryInfo(TimelapseGlobals.ImageArchiveDirectoryBase + cs.id + "/" + path);
 			FileInfo fiBdl = new FileInfo(diArg.Parent.FullName + "/" + diArg.Name + ".bdl");
 
 			if (!fiBdl.Exists && !diArg.Exists)
@@ -146,7 +147,7 @@ namespace TimelapseCore
 		public static string GetFileListUrls(CameraSpec cs, string path)
 		{
 			StringBuilder sb = new StringBuilder();
-			DirectoryInfo diArg = new DirectoryInfo(Globals.ImageArchiveDirectoryBase + cs.id + "/" + path);
+			DirectoryInfo diArg = new DirectoryInfo(TimelapseGlobals.ImageArchiveDirectoryBase + cs.id + "/" + path);
 			FileInfo fiBdl = new FileInfo(diArg.Parent.FullName + "/" + diArg.Name + ".bdl");
 
 			if (!fiBdl.Exists)
@@ -191,7 +192,7 @@ namespace TimelapseCore
 		}
 		public static string GetLatestPath(CameraSpec cs, out string latestImgTimeHtml, out DateTime lastImgDateTime)
 		{
-			return GetLatestPath(Globals.ImageArchiveDirectoryBase + cs.id, false, out latestImgTimeHtml, out lastImgDateTime);
+			return GetLatestPath(TimelapseGlobals.ImageArchiveDirectoryBase + cs.id, false, out latestImgTimeHtml, out lastImgDateTime);
 		}
 		private static string GetLatestPath(string path, bool imgPath, out string latestImgTimeHtml, out DateTime lastImgDateTime)
 		{
@@ -256,7 +257,7 @@ namespace TimelapseCore
 		}
 		public static string GetLatestImagePath(CameraSpec cs, out string latestImgTimeHtml, out DateTime latestImgDateTime)
 		{
-			return GetLatestPath(Globals.ImageArchiveDirectoryBase + cs.id, true, out latestImgTimeHtml, out latestImgDateTime);
+			return GetLatestPath(TimelapseGlobals.ImageArchiveDirectoryBase + cs.id, true, out latestImgTimeHtml, out latestImgDateTime);
 		}
 		private static List<string> GetFileListSafer(string path)
 		{

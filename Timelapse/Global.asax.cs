@@ -7,6 +7,7 @@ using System.Web.SessionState;
 using TimelapseCore;
 using System.Threading;
 using System.Web.Hosting;
+using BPUtil;
 
 namespace Timelapse
 {
@@ -15,7 +16,7 @@ namespace Timelapse
 		static TimelapseWrapper server;
 		protected void Application_Start(object sender, EventArgs e)
 		{
-			Globals.Initialize(HostingEnvironment.ApplicationPhysicalPath + "NoExist.exe");
+			TimelapseGlobals.Initialize(HostingEnvironment.ApplicationPhysicalPath + "NoExist.exe");
 			server = new TimelapseWrapper(true);
 		}
 

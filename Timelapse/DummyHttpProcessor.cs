@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.IO;
+using BPUtil.SimpleHttp;
+using TimelapseCore.Extensions;
 
 namespace Timelapse
 {
-	public class DummyHttpProcessor : SimpleHttp.HttpProcessor
+	public class DummyHttpProcessor : HttpProcessor
 	{
 		HttpContext context;
-		public DummyHttpProcessor(System.Web.HttpContext context, SimpleHttp.HttpServer srv)
+		public DummyHttpProcessor(System.Web.HttpContext context, HttpServer srv)
 			: base(context.Request.IsSecureConnection)
 		{
 			this.context = context;
@@ -47,8 +49,8 @@ namespace Timelapse
 
 			remoteIPAddress = context.Request.UserHostAddress;
 
-			requestCookies = SimpleHttp.Cookies.FromHttpCookieCollection(context.Request.Cookies);
-			responseCookies = new SimpleHttp.Cookies();
+			requestCookies = HttpServerExtensions.FromHttpCookieCollection(context.Request.Cookies);
+			responseCookies = new Cookies();
 		}
 		public override void writeSuccess(string contentType = "text/html", long contentLength = -1, string responseCode = "200 OK", List<KeyValuePair<string, string>> additionalHeaders = null)
 		{

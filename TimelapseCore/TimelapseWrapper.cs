@@ -6,6 +6,8 @@ using System.Threading;
 using System.Diagnostics;
 using System.IO;
 using TimelapseCore.Configuration;
+using BPUtil;
+using BPUtil.SimpleHttp;
 
 namespace TimelapseCore
 {
@@ -21,8 +23,8 @@ namespace TimelapseCore
 		{
 			if (!isAspNet)
 			{
-				Logger.logType = LoggingMode.Console | LoggingMode.File;
-				Globals.Initialize(System.Reflection.Assembly.GetExecutingAssembly().Location);
+				Logger.logType = Environment.UserInteractive ? (LoggingMode.Console | LoggingMode.File) : LoggingMode.File;
+				TimelapseGlobals.Initialize(System.Reflection.Assembly.GetExecutingAssembly().Location);
 				AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
 			}
 
@@ -39,14 +41,14 @@ namespace TimelapseCore
 					cfg.users.Add(new User("admin", "admin", 100));
 				cfg.Save(Globals.ConfigFilePath);
 			}
-			SimpleHttp.SimpleHttpLogger.RegisterLogger(Logger.httpLogger);
+			SimpleHttpLogger.RegisterLogger(Logger.httpLogger);
 
 			// The ASP.NET implementation does not currently support request throttling, though output throttling should be more-or-less possible easily.
-			SimpleHttp.GlobalThrottledStream.ThrottlingManager.Initialize(3);
-			SimpleHttp.GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(0, cfg.options.uploadBytesPerSecond);
-			SimpleHttp.GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(1, cfg.options.downloadBytesPerSecond);
-			SimpleHttp.GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(2, -1);
-			SimpleHttp.GlobalThrottledStream.ThrottlingManager.BurstIntervalMs = cfg.options.throttlingGranularity;
+			GlobalThrottledStream.ThrottlingManager.Initialize(3);
+			GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(0, cfg.options.uploadBytesPerSecond);
+			GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(1, cfg.options.downloadBytesPerSecond);
+			GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(2, -1);
+			GlobalThrottledStream.ThrottlingManager.BurstIntervalMs = cfg.options.throttlingGranularity;
 		}
 		#region Start / Stop
 		/// <summary>

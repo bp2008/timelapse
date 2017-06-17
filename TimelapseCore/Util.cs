@@ -8,12 +8,15 @@ using System.Net;
 using System.Drawing.Imaging;
 using System.Collections.Concurrent;
 using TimelapseCore.Configuration;
+using System.Threading;
+using BPUtil;
 
 namespace TimelapseCore
 {
 	public static class Util
 	{
-		private static Random rand = new Random();
+		private static int seed = Environment.TickCount;
+		private static readonly ThreadLocal<Random> rand = new ThreadLocal<Random>(() => new Random(Interlocked.Increment(ref seed)));
 		private static ConcurrentDictionary<string, TimeZoneInfo> timeZones;
 		static Util()
 		{
@@ -24,9 +27,9 @@ namespace TimelapseCore
 		public static char GetRandomAlphaNumericChar()
 		{
 			int i;
-			lock (rand)
+			lock (rand.Value)
 			{
-				i = rand.Next(62);
+				i = rand.Value.Next(62);
 			}
 			if (i < 10)
 				return (char)(48 + i);
@@ -134,7 +137,7 @@ namespace TimelapseCore
 					req.Credentials = credentials;
 				req.ContentType = ContentType;
 				req.Method = "POST";
-				req.UserAgent = "Timelapse " + Globals.Version;
+				req.UserAgent = "Timelapse " + TimelapseGlobals.Version;
 				if (cookieContainer == null)
 					cookieContainer = new CookieContainer();
 				req.CookieContainer = cookieContainer;
@@ -251,7 +254,7 @@ namespace TimelapseCore
 
 		public static string GetBundleFilePathForTimestamp(CameraSpec cs, DateTime t)
 		{
-			return Globals.ImageArchiveDirectoryBase + cs.id + "/" + t.Year.ToString().PadLeft(4, '0') + "/" + t.Month.ToString().PadLeft(2, '0') + "/" + t.Day.ToString().PadLeft(2, '0') + ".bdl";
+			return TimelapseGlobals.ImageArchiveDirectoryBase + cs.id + "/" + t.Year.ToString().PadLeft(4, '0') + "/" + t.Month.ToString().PadLeft(2, '0') + "/" + t.Day.ToString().PadLeft(2, '0') + ".bdl";
 		}
 
 		public static DateTime GetTimestampFromBundleKey(string fileName, out string tempF)

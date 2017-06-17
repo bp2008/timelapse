@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Web;
+using BPUtil.SimpleHttp;
 using TimelapseCore.Configuration;
 
 namespace TimelapseCore.Pages.Admin
 {
 	class Cameras : AdminBase
 	{
-		protected override string GetPageHtml(SimpleHttp.HttpProcessor p, Session s)
+		protected override string GetPageHtml(HttpProcessor p, Session s)
 		{
 			ItemTable<CameraSpec> tbl = new ItemTable<CameraSpec>("Cameras", "camera", "id", TimelapseWrapper.cfg.cameras, TimelapseWrapper.cfg, ItemTableMode.Add, new ItemTableColumnDefinition<CameraSpec>[]
 			{

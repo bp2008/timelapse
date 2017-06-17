@@ -28,6 +28,7 @@
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -130,13 +131,17 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TimelapseCore\TimelapseCore.csproj">
-      <Project>{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}</Project>
-      <Name>TimelapseCore</Name>
-    </ProjectReference>
+    <None Include="www\Scripts\jquery-1.11.1.min.map" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="www\Scripts\jquery-1.11.1.min.map" />
+    <ProjectReference Include="..\..\BPUtil\BPUtil\BPUtil.csproj">
+      <Project>{A4981D8D-DEBF-4B34-B9CE-FF25520A02B7}</Project>
+      <Name>BPUtil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TimelapseCore\TimelapseCore.csproj">
+      <Project>{31f9aafc-3f9f-4697-804d-dbc31fc0f355}</Project>
+      <Name>TimelapseCore</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

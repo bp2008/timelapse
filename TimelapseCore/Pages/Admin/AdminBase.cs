@@ -4,12 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.Web;
+using BPUtil.SimpleHttp;
+using BPUtil;
 
 namespace TimelapseCore.Pages.Admin
 {
 	abstract class AdminBase
 	{
-		public string GetHtml(SimpleHttp.HttpProcessor p, Session s, string pageKey)
+		public string GetHtml(HttpProcessor p, Session s, string pageKey)
 		{
 			try
 			{
@@ -29,7 +31,7 @@ namespace TimelapseCore.Pages.Admin
 		<tr>
 			<td colspan=""2"" id=""header"">
 				<div class=""title"">Timelapse</div>
-				<div class=""version"">Version " + Globals.Version + @"</div>
+				<div class=""version"">Version " + TimelapseGlobals.Version + @"</div>
 			</td>
 		</tr>
 		<tr id=""bodycell"">
@@ -46,7 +48,7 @@ namespace TimelapseCore.Pages.Admin
 		</tr>
 		<tr>
 			<td colspan=""2"" id=""footer"">
-				Timelapse " + Globals.Version + @"
+				Timelapse " + TimelapseGlobals.Version + @"
 			</td>
 		</tr>
 	</tbody>
@@ -61,7 +63,7 @@ namespace TimelapseCore.Pages.Admin
 			return null;
 		}
 
-		private string GetAdminScript(SimpleHttp.HttpProcessor p, Session s, string pageKey)
+		private string GetAdminScript(HttpProcessor p, Session s, string pageKey)
 		{
 			return @"<script type=""text/javascript"">
 	var isCreatingItem = false;
@@ -191,7 +193,7 @@ namespace TimelapseCore.Pages.Admin
 </script>";
 		}
 
-		protected virtual string GetMenuHtml(SimpleHttp.HttpProcessor p, Session s, string pageKey)
+		protected virtual string GetMenuHtml(HttpProcessor p, Session s, string pageKey)
 		{
 			StringBuilder sb = new StringBuilder();
 			foreach (string key in AdminPage.pageKeys)
@@ -227,8 +229,8 @@ namespace TimelapseCore.Pages.Admin
 	");
 			return sb.ToString();
 		}
-		protected abstract string GetPageHtml(SimpleHttp.HttpProcessor p, Session s);
-		internal virtual void HandleSave(SimpleHttp.HttpProcessor p, Session s, SortedList<string, SortedList<string, string>> items)
+		protected abstract string GetPageHtml(HttpProcessor p, Session s);
+		internal virtual void HandleSave(HttpProcessor p, Session s, SortedList<string, SortedList<string, string>> items)
 		{
 			throw new Exception("HandleSave is not implemented by this class!");
 		}
@@ -471,7 +473,7 @@ namespace TimelapseCore.Pages.Admin
 			pageKeyToName[key] = name;
 			pageKeyToType[key] = type;
 		}
-		public static void HandleRequest(string pageName, SimpleHttp.HttpProcessor p, Session s)
+		public static void HandleRequest(string pageName, HttpProcessor p, Session s)
 		{
 			string pageKey = pageName.ToLower();
 
@@ -497,7 +499,7 @@ namespace TimelapseCore.Pages.Admin
 			p.outputStream.Write(str);
 		}
 
-		public static string HandleSaveList(SimpleHttp.HttpProcessor p, Session s)
+		public static string HandleSaveList(HttpProcessor p, Session s)
 		{
 			string pageKey = p.GetPostParam("pagename").ToLower();
 

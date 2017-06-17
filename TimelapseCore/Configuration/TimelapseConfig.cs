@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using BPUtil.SimpleHttp;
+using BPUtil;
 
 namespace TimelapseCore.Configuration
 {
@@ -17,7 +19,7 @@ namespace TimelapseCore.Configuration
 		public List<CameraSpec> cameras = new List<CameraSpec>();
 		public TimelapseGlobalOptions options = new TimelapseGlobalOptions();
 
-		public string SaveItem(SimpleHttp.HttpProcessor p)
+		public string SaveItem(HttpProcessor p)
 		{
 			bool isNew = p.GetBoolParam("new");
 			string originalIdNotLowerCase = p.GetPostParam("itemid");
@@ -104,9 +106,9 @@ namespace TimelapseCore.Configuration
 					this.options = o;
 					Save(Globals.ConfigFilePath);
 				}
-				SimpleHttp.GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(0, o.uploadBytesPerSecond);
-				SimpleHttp.GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(1, o.downloadBytesPerSecond);
-				SimpleHttp.GlobalThrottledStream.ThrottlingManager.BurstIntervalMs = o.throttlingGranularity;
+				GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(0, o.uploadBytesPerSecond);
+				GlobalThrottledStream.ThrottlingManager.SetBytesPerSecond(1, o.downloadBytesPerSecond);
+				GlobalThrottledStream.ThrottlingManager.BurstIntervalMs = o.throttlingGranularity;
 				return result;
 			}
 			return "0Invalid item type: " + itemtype;
@@ -156,7 +158,7 @@ namespace TimelapseCore.Configuration
 			return null;
 		}
 
-		public string DeleteItems(SimpleHttp.HttpProcessor p)
+		public string DeleteItems(HttpProcessor p)
 		{
 			string itemtype = p.GetPostParam("itemtype");
 			string ids = p.GetPostParam("ids").ToLower();
@@ -191,7 +193,7 @@ namespace TimelapseCore.Configuration
 			return "1";
 		}
 
-		public string ReorderCam(SimpleHttp.HttpProcessor p)
+		public string ReorderCam(HttpProcessor p)
 		{
 			lock (this)
 			{

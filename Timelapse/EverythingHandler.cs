@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Web;
+using BPUtil.SimpleHttp;
 
 namespace Timelapse
 {
@@ -23,7 +24,7 @@ namespace Timelapse
 		TimelapseCore.TimelapseServer server = new TimelapseCore.TimelapseServer(-1, -1);
 		public void ProcessRequest(HttpContext context)
 		{
-			SimpleHttp.HttpProcessor processor = new DummyHttpProcessor(context, server);
+			HttpProcessor processor = new DummyHttpProcessor(context, server);
 			if (context.Request.HttpMethod == "GET")
 				server.handleGETRequest(processor);
 			else if (context.Request.HttpMethod == "POST")
