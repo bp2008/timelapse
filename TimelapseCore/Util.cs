@@ -15,8 +15,6 @@ namespace TimelapseCore
 {
 	public static class Util
 	{
-		private static int seed = Environment.TickCount;
-		private static readonly ThreadLocal<Random> rand = new ThreadLocal<Random>(() => new Random(Interlocked.Increment(ref seed)));
 		private static ConcurrentDictionary<string, TimeZoneInfo> timeZones;
 		static Util()
 		{
@@ -26,11 +24,7 @@ namespace TimelapseCore
 		}
 		public static char GetRandomAlphaNumericChar()
 		{
-			int i;
-			lock (rand.Value)
-			{
-				i = rand.Value.Next(62);
-			}
+			int i = StaticRandom.Next(62);
 			if (i < 10)
 				return (char)(48 + i);
 			if (i < 36)
