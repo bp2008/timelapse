@@ -324,12 +324,15 @@ namespace TimelapseCore
 						}
 						else
 						{
+							string mime = Mime.GetMimeType(fi.Extension);
+							if (requestedPage.StartsWith(".well-known/acme-challenge/"))
+								mime = "text/plain";
 							if (fi.LastWriteTimeUtc.ToString("R") == p.GetHeaderValue("if-modified-since"))
 							{
-								p.writeSuccess(Mime.GetMimeType(fi.Extension), -1, "304 Not Modified");
+								p.writeSuccess(mime, -1, "304 Not Modified");
 								return;
 							}
-							p.writeSuccess(Mime.GetMimeType(fi.Extension), fi.Length, additionalHeaders: GetCacheLastModifiedHeaders(TimeSpan.FromHours(1), fi.LastWriteTimeUtc));
+							p.writeSuccess(mime, fi.Length, additionalHeaders: GetCacheLastModifiedHeaders(TimeSpan.FromHours(1), fi.LastWriteTimeUtc));
 							p.outputStream.Flush();
 							using (FileStream fs = fi.OpenRead())
 							{

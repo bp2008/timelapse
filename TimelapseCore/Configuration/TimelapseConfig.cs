@@ -10,8 +10,6 @@ namespace TimelapseCore.Configuration
 {
 	public class TimelapseConfig : SerializableObjectBase
 	{
-		public int webSocketPort = 44454;
-		public int webSocketPort_secure = -1;
 		public int webport = 44456;
 		public int webport_https = -1;
 

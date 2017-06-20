@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using BPUtil;
 
-namespace BPUtil
+namespace TimelapseCore
 {
 	public static partial class TimelapseGlobals
 	{
@@ -26,7 +27,7 @@ namespace BPUtil
 			get
 			{
 				if (wwwDirectoryBase == null)
-					wwwDirectoryBase = BPUtil.Globals.ApplicationRoot + "/www/";
+					wwwDirectoryBase = Globals.ApplicationRoot + "/www/";
 				return wwwDirectoryBase;
 			}
 		}
@@ -40,7 +41,7 @@ namespace BPUtil
 			get
 			{
 				if (imageArchiveDirectoryBase == null)
-					imageArchiveDirectoryBase = BPUtil.Globals.ApplicationRoot + "/Images/imgarchive/";
+					imageArchiveDirectoryBase = Globals.ApplicationRoot + "/Images/imgarchive/";
 				return imageArchiveDirectoryBase;
 			}
 		}

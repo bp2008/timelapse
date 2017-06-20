@@ -18,6 +18,7 @@ namespace TimelapseCore
 		TimelapseServer httpServer;
 		public static DateTime startTime = DateTime.MinValue;
 		public static TimelapseConfig cfg;
+		public event EventHandler<string> SocketBound = delegate { };
 
 		public TimelapseWrapper(bool isAspNet)
 		{
@@ -61,10 +62,17 @@ namespace TimelapseCore
 			startTime = DateTime.Now;
 
 			httpServer = new TimelapseServer(cfg.webport, cfg.webport_https);
+			httpServer.SocketBound += HttpServer_SocketBound;
 			httpServer.Start();
 
 			Logger.StartLoggingThreads();
 		}
+
+		private void HttpServer_SocketBound(object sender, string e)
+		{
+			SocketBound(this, e);
+		}
+
 		public void Stop()
 		{
 			if (httpServer != null)
