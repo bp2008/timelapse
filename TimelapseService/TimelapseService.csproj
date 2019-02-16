@@ -8,7 +8,7 @@
     <ProjectGuid>{580BBE3F-55DC-4DD1-8E3E-D92BB92B17D0}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TimelapseService</RootNamespace>
+    <RootNamespace>Timelapse</RootNamespace>
     <AssemblyName>TimelapseService</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <TargetFrameworkProfile>
@@ -48,6 +48,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>3rdParty\IonicZip\Ionic.Zip.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -61,6 +64,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CameraMaintenance.cs" />
+    <Compile Include="WebServerUtil.cs" />
     <Compile Include="ComparisonComparer.cs" />
     <Compile Include="Configuration\Attributes.cs" />
     <Compile Include="Configuration\CameraSpec.cs" />
@@ -100,7 +105,12 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="app.manifest" />
+    <None Include="packages.config" />
     <None Include="www\Scripts\jquery-1.11.1.min.map" />
+    <None Include="Z_NpmInstall.bat" />
+    <None Include="Z_NpmPrune.bat" />
+    <None Include="Z_WebpackBuild.bat" />
+    <None Include="Z_WebpackDevServer.bat" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Documents\Visual Studio 2015\Projects\x264net\x264net\x264net.vcxproj">
@@ -165,9 +175,12 @@
     <Content Include="www\Styles\TableSorter_Blue.css" />
     <Content Include="www\Styles\TableSorter_Green.css" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="www\new\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(SolutionDir)Timelapse\www\*.*" "$(TargetDir)www\*.*" /E /C /R /Y /I
+    <PostBuildEvent>xcopy "$(ProjectDir)\www\*.*" "$(TargetDir)www\*.*" /E /C /R /Y /I
 copy /Y /B "$(TargetDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Release\$(TargetName)$(TargetExt)"
 copy /Y /B "$(SolutionDir)$(ConfigurationName)-$(PlatformName)\msvcp140.dll" "$(TargetDir)msvcp140.dll"
 copy /Y /B "$(SolutionDir)$(ConfigurationName)-$(PlatformName)\vcruntime140.dll" "$(TargetDir)vcruntime140.dll"

@@ -76,7 +76,7 @@ namespace Timelapse
 			$(""#errortext"").html('Logging in...');
 			var username = $(""#username"").val();
 			var password = $(""#password"").val() + ""justtomakethingsharder"";
-			setCookie('auth', encodeURIComponent(username) + ':' + encodeURIComponent(HashPW(password)), 1000);
+			setCookie('tlauth', encodeURIComponent(username) + ':' + encodeURIComponent(HashPW(password)), 1000);
 			top.location.href = " + (string.IsNullOrWhiteSpace(urlToLoad) ? "top.location.href" : "decodeURIComponent('" + HttpUtility.JavaScriptStringEncode(Uri.EscapeDataString(urlToLoad)) + "')") + @";
 		}
 		function HashPW(pw)
