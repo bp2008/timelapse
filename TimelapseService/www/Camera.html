@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>%CAMNAME%</title>
+	<!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" type="text/javascript"></script>-->
+	<script src="Scripts/jquery-1.11.1.min.js" type="text/javascript"></script>
+	<script src="Scripts/jquery.cookie.js" type="text/javascript"></script>
+	<script src="Scripts/jquery.mousewheel.js" type="text/javascript"></script>
+	<script src="Scripts/Camera.js?nocache=%APP_VERSION%" type="text/javascript"></script>
+	<link rel="stylesheet" type="text/css" href="Styles/Camera.css?nocache=%APP_VERSION%" />
+	<script type="text/javascript">
+		var camId = "%CAMID%";
+		var currentImgTime = "%LATEST_IMAGE_TIME%";
+		var imgFrameGradientBg = %CAMFRAME_GRADIENT%;
+	</script>
+	<style type="text/css">
+		%CSS%
+	</style>
+</head>
+<body>
+	<div id="outerFrame">
+		<div id="leftMenu" class="nounderline">
+			<div id="leftMenuInner">
+				<div id="cameraNameDiv">
+					%CAMNAME_HTML%</div>
+				<div id="navmenuwrapper">
+					%NAVMENU%</div>
+			</div>
+		</div>
+		<div id="topMenu" class="nounderline">
+			<div id="topMenuInner">
+				<span id="SlideshowWrapper"><div id="SlideshowSpeedButton"onclick="return SlideshowSpeedChanged(event);" title="Click to change slideshow speed" currentspeed="3">3</div><img id="SlideshowStartButton" src="Images/SlideshowPlayButton.png"
+					alt="Slideshow" onclick="startSlideshow();" title="Start timelapse/slideshow beginning at current image" /><img
+						id="SlideshowStopButton" src="Images/SlideshowPauseButton.png" alt="Slideshow"
+						onclick="stopSlideshow();" title="Pause the slideshow" /></span>
+				<div id="imgtime" class="bgcolored">
+					...</div>
+				<span id="customTopMenu" class="bgcolored">%TOPMENU%</span></div>
+		</div>
+		<div id="camCell" class="nounderline">
+			<div style="overflow: hidden; width: 100%; height: 100%; position: relative;">
+				<img id="imgFrame" class="CamImg" src="%LATEST_IMAGE%" alt="Image" />
+			</div>
+		</div>
+		<div id="zoomhint" style="display: none">
+		</div>
+		<img id="ajax-loader-t" style="display: none" src="Images/ajax-loader-t8.gif" alt="..." />
+</body>
+</html>

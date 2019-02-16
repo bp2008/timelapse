@@ -1,0 +1,204 @@
+.directorypath
+{
+	font-weight: bold;
+}
+#ajax-loader-t
+{
+	position: relative;
+	margin: 2px 0px 0px 3px;
+}
+/*       */
+
+#outerFrame
+{
+	width: 100%;
+	height: 100%;
+}
+#imgFrame
+{
+	position: absolute;
+}
+table
+{
+	border-collapse: collapse;
+}
+td
+{
+	padding: 0px;
+}
+#camCell
+{
+	overflow: hidden;
+}
+#cameraNameDiv img
+{
+	max-width: 170px;
+}
+#camCell, #topMenu
+{
+	position: absolute;
+	left: 186px;
+}
+#imgtime
+{
+	display: inline-block;
+	text-align: center;
+}
+#SlideshowStartButton, #SlideshowStopButton
+{
+	width: 24px;
+	height: 24px;
+	vertical-align: bottom;
+	cursor: pointer;
+}
+#SlideshowSpeedButton
+{
+	display: inline-block;
+	height: 19px;
+	vertical-align: bottom;
+	margin-right: 5px;
+	padding: 3px 3px 0px 2px;
+	cursor: pointer;
+	background-color: rgba(0,0,0,0.67);
+	color: #AAAAAA;
+	border: 1px solid #AAAAAA;
+	font-family: Arial, Sans-Serif;
+	font-size: 14px;
+}
+#SlideshowSpeedButton:hover
+{
+	background-color: rgba(0,0,0,0.33);
+	color: #FFFFFF;
+}
+#SlideshowSpeedButton:active
+{
+	background-color: #888888;
+	color: #FFFFFF;
+}
+#SlideshowStopButton
+{
+	display: none;
+}
+#leftMenu
+{
+	position: absolute;
+	width: 186px;
+	height: 100%;
+	overflow: hidden;
+	border-right: 2px solid rgba(255,255,255,0.3);
+}
+#leftMenu a
+{
+	text-decoration: none;
+}
+#topMenuInner
+{
+	margin: 8px 8px 0px 8px;
+}
+#topMenu
+{
+	border-bottom: 2px solid rgba(255,255,255,0.3);
+}
+body
+{
+	background-repeat: no-repeat;
+	background-position: left top;
+	margin: 0px;
+	overflow: hidden;
+	font-size: 16pt;
+}
+#zoomhint
+{
+	position: absolute;
+	background-color: #000000;
+	color: #FFFFFF;
+	padding: 3px;
+	opacity: 1;
+	margin: 0px 5px 5px 0px;
+}
+#customTopMenu
+{
+	margin-left: 10px;
+}
+#cameraNameDiv
+{
+	text-align: center;
+	margin-bottom: 5px;
+}
+#leftMenuInner
+{
+	padding: 8px;
+	overflow: hidden;
+}
+#navheader
+{
+	margin-bottom: 5px;
+}
+#navlinks
+{
+	overflow: auto;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+#navlinks a.selected
+{
+	text-shadow: 0px 0px 5px #ff0000;
+}
+
+#popupFrame
+{
+	position: fixed;
+	background-color: #BB0000;
+	border: 1px Solid White;
+	border-radius: 5px;
+	padding: 5px;
+	top: 15px;
+	width: 300px;
+	left: 20px;
+}
+#popupMessage
+{
+	color: White;
+	margin-bottom: 5px;
+}
+#popupMessage a
+{
+	color: #DDDDFF;
+}
+.flip-horizontal
+{
+	-moz-transform: scaleX(-1);
+	-webkit-transform: scaleX(-1);
+	-o-transform: scaleX(-1);
+	transform: scaleX(-1);
+	-ms-filter: fliph; /*IE*/
+	filter: fliph; /*IE*/
+}
+.flip-vertical
+{
+	-moz-transform: scaleY(-1);
+	-webkit-transform: scaleY(-1);
+	-o-transform: scaleY(-1);
+	transform: scaleY(-1);
+	-ms-filter: flipv; /*IE*/
+	filter: flipv; /*IE*/
+}
+.flip-both
+{
+	-moz-transform: scale(-1,-1);
+	-webkit-transform: scale(-1,-1);
+	-o-transform: scale(-1,-1);
+	transform: scale(-1,-1);
+	-ms-filter: flipv fliph; /*IE*/
+	filter: flipv fliph; /*IE*/
+}
+.unselectable
+{
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	cursor: default;
+}

@@ -7,7 +7,7 @@ using System.Text;
 using System.Windows.Forms;
 using BPUtil;
 using BPUtil.Forms;
-using TimelapseCore;
+using Timelapse;
 
 namespace TimelapseService
 {

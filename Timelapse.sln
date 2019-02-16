@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2009
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Timelapse", "Timelapse\Timelapse.csproj", "{530283D3-5F7C-462B-8D75-23A375737237}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimelapseCore", "TimelapseCore\TimelapseCore.csproj", "{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimelapseService", "TimelapseService\TimelapseService.csproj", "{580BBE3F-55DC-4DD1-8E3E-D92BB92B17D0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BPUtil", "..\BPUtil\BPUtil\BPUtil.csproj", "{A4981D8D-DEBF-4B34-B9CE-FF25520A02B7}"
@@ -14,6 +10,13 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "x264net", "..\..\..\Documents\Visual Studio 2015\Projects\x264net\x264net\x264net.vcxproj", "{26AABCC4-4BE8-4777-89ED-C6132383CD03}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "turbojpegCLI", "..\turbojpegCLI\turbojpegCLI\turbojpegCLI\turbojpegCLI.vcxproj", "{53B9B82C-FA36-4AAA-A20A-4C10EC72DBED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1F63D190-2C70-440D-AF48-061A993A9173}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,22 +26,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{530283D3-5F7C-462B-8D75-23A375737237}.Debug|x64.ActiveCfg = Debug|x64
-		{530283D3-5F7C-462B-8D75-23A375737237}.Debug|x64.Build.0 = Debug|x64
-		{530283D3-5F7C-462B-8D75-23A375737237}.Debug|x86.ActiveCfg = Debug|x86
-		{530283D3-5F7C-462B-8D75-23A375737237}.Debug|x86.Build.0 = Debug|x86
-		{530283D3-5F7C-462B-8D75-23A375737237}.Release|x64.ActiveCfg = Release|x64
-		{530283D3-5F7C-462B-8D75-23A375737237}.Release|x64.Build.0 = Release|x64
-		{530283D3-5F7C-462B-8D75-23A375737237}.Release|x86.ActiveCfg = Release|x86
-		{530283D3-5F7C-462B-8D75-23A375737237}.Release|x86.Build.0 = Release|x86
-		{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}.Debug|x64.Build.0 = Debug|Any CPU
-		{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}.Debug|x86.ActiveCfg = Debug|x86
-		{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}.Debug|x86.Build.0 = Debug|x86
-		{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}.Release|x64.ActiveCfg = Release|Any CPU
-		{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}.Release|x64.Build.0 = Release|Any CPU
-		{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}.Release|x86.ActiveCfg = Release|x86
-		{31F9AAFC-3F9F-4697-804D-DBC31FC0F355}.Release|x86.Build.0 = Release|x86
 		{580BBE3F-55DC-4DD1-8E3E-D92BB92B17D0}.Debug|x64.ActiveCfg = Debug|x86
 		{580BBE3F-55DC-4DD1-8E3E-D92BB92B17D0}.Debug|x86.ActiveCfg = Debug|x86
 		{580BBE3F-55DC-4DD1-8E3E-D92BB92B17D0}.Debug|x86.Build.0 = Debug|x86

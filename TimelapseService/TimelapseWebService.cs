@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
-using TimelapseCore;
+using Timelapse;
 
 namespace TimelapseService
 {
