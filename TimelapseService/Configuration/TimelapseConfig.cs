@@ -12,6 +12,8 @@ namespace Timelapse.Configuration
 	{
 		public int webport = 44456;
 		public int webport_https = -1;
+		public string debugWWWDir = "";
+		public bool devMode = false;
 
 		public List<User> users = new List<User>();
 		public List<CameraSpec> cameras = new List<CameraSpec>();

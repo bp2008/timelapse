@@ -20,6 +20,7 @@ namespace Timelapse
 	public class TimelapseServer : HttpServer
 	{
 		public static SessionManager sm = new SessionManager();
+		private WebpackProxy webpackProxy = null;
 		public TimelapseServer(int port, int port_https)
 			: base(port, port_https)
 		{
@@ -71,7 +72,25 @@ namespace Timelapse
 			//thr.IsBackground = true;
 			//thr.Name = "VideoEncoder";
 			//thr.Start();
+			if (TimelapseWrapper.cfg.devMode)
+			{
+				DirectoryInfo debugWWW = GetDebugWWW();
+				if (debugWWW != null)
+				{
+					Console.ForegroundColor = ConsoleColor.Cyan;
+					Console.WriteLine("Starting web server in dev mode. Webpack Proxy is enabled.");
+					Console.ResetColor();
+					webpackProxy = new WebpackProxy(9000, debugWWW.Parent.FullName);
+				}
+				else
+				{
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine("Unable to start web server in dev mode because debug www folder is invalid: \"" + TimelapseWrapper.cfg.debugWWWDir + "\"");
+					Console.ResetColor();
+				}
+			}
 		}
+
 		public override void handleGETRequest(HttpProcessor p)
 		{
 			try
@@ -288,8 +307,14 @@ namespace Timelapse
 					{
 						#region www
 						DirectoryInfo WWWDirectory = new DirectoryInfo(TimelapseGlobals.WWWDirectoryBase);
+						DirectoryInfo debugWWW = GetDebugWWW();
+						if (debugWWW != null)
+							WWWDirectory = debugWWW;
 						string wwwDirectoryBase = WWWDirectory.FullName.Replace('\\', '/').TrimEnd('/') + '/';
-						FileInfo fi = new FileInfo(wwwDirectoryBase + p.requestedPage);
+						string reqPage = p.requestedPage;
+						if (reqPage == "")
+							reqPage = "Default.html";
+						FileInfo fi = new FileInfo(wwwDirectoryBase + reqPage);
 						string targetFilePath = fi.FullName.Replace('\\', '/');
 						if (!targetFilePath.StartsWith(wwwDirectoryBase) || targetFilePath.Contains("../"))
 						{
@@ -298,12 +323,24 @@ namespace Timelapse
 							p.writeFailure("400 Bad Request");
 							return;
 						}
+						if (webpackProxy != null)
+						{
+							// Handle hot module reload provided by webpack dev server.
+							switch (fi.Extension.ToLower())
+							{
+								case ".js":
+								case ".map":
+								case ".css":
+								case ".json":
+									webpackProxy.Proxy(p);
+									return;
+							}
+						}
 						if (!fi.Exists)
 						{
 							if (WebServerUtil.HandleAdminConfiguredRedirect(p))
 								return;
-							// This should be just a 404 error, but that causes ASP.NET to try to handle the request with another handler.  Like the static file handler.  Which we don't want.
-							p.writeFailure("400 Bad Request");
+							p.writeFailure("404 Not Found");
 							return;
 						}
 
@@ -397,6 +434,17 @@ namespace Timelapse
 				if (!p.isOrdinaryDisconnectException(ex))
 					Logger.Debug(ex);
 			}
+		}
+
+		private DirectoryInfo GetDebugWWW()
+		{
+			if (!string.IsNullOrWhiteSpace(TimelapseWrapper.cfg.debugWWWDir))
+			{
+				DirectoryInfo di = new DirectoryInfo(TimelapseWrapper.cfg.debugWWWDir);
+				if (di.Exists)
+					return di;
+			}
+			return null;
 		}
 
 		private bool HandlePublicServiceDisabled(HttpProcessor p)

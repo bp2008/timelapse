@@ -103,10 +103,19 @@
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".babelrc" />
     <None Include="app.config" />
     <None Include="app.manifest" />
+    <None Include="package.json" />
     <None Include="packages.config" />
+    <None Include="www\jsconfig.json" />
     <None Include="www\Scripts\jquery-1.11.1.min.map" />
+    <None Include="www\vues\all\AllPage.vue" />
+    <None Include="www\vues\App.vue" />
+    <None Include="www\vues\ClientLayout.vue" />
+    <None Include="www\vues\common\PassThroughChild.vue" />
+    <None Include="www\vues\common\ScaleLoader.vue" />
+    <None Include="www\vues\common\Template.vue" />
     <None Include="Z_NpmInstall.bat" />
     <None Include="Z_NpmPrune.bat" />
     <None Include="Z_WebpackBuild.bat" />
@@ -129,6 +138,8 @@
   <ItemGroup>
     <Content Include="3rdParty\IonicZip\Ionic.Zip.dll" />
     <Content Include="3rdParty\IonicZip\License.txt" />
+    <Content Include="webpack.config.js" />
+    <Content Include="www\404.html" />
     <Content Include="www\All.html" />
     <Content Include="www\Camera.html" />
     <Content Include="www\Images\ajax-loader-t.gif" />
@@ -145,7 +156,10 @@
     <Content Include="www\Images\desc.gif" />
     <Content Include="www\Images\SlideshowPauseButton.png" />
     <Content Include="www\Images\SlideshowPlayButton.png" />
+    <Content Include="www\main.js" />
+    <Content Include="www\Default.html" />
     <Content Include="www\robots.txt" />
+    <Content Include="www\router\index.js" />
     <Content Include="www\Scripts\Camera.js" />
     <Content Include="www\Scripts\jquery-1.11.1.js" />
     <Content Include="www\Scripts\jquery-1.11.1.min.js" />
@@ -155,6 +169,9 @@
     <Content Include="www\Scripts\longclick.js" />
     <Content Include="www\Scripts\sha1.js" />
     <Content Include="www\Scripts\TableSorter.js" />
+    <Content Include="www\Scripts\ToasterHelper.js" />
+    <Content Include="www\Scripts\Util.js" />
+    <Content Include="www\store\store.js" />
     <Content Include="www\Styles\Camera.css" />
     <Content Include="www\Styles\images\animated-overlay.gif" />
     <Content Include="www\Styles\images\ui-bg_flat_0_aaaaaa_40x100.png" />
@@ -176,15 +193,17 @@
     <Content Include="www\Styles\TableSorter_Green.css" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="www\new\" />
+    <Folder Include="www\Images\sprite\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(ProjectDir)\www\*.*" "$(TargetDir)www\*.*" /E /C /R /Y /I
-copy /Y /B "$(TargetDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Release\$(TargetName)$(TargetExt)"
+    <PostBuildEvent>cd "$(ProjectDir)"
+node "$(ProjectDir)node_modules\webpack\bin\webpack"
+xcopy "$(ProjectDir)www" "$(TargetDir)www" /E /C /R /Y /I /Q
 copy /Y /B "$(SolutionDir)$(ConfigurationName)-$(PlatformName)\msvcp140.dll" "$(TargetDir)msvcp140.dll"
 copy /Y /B "$(SolutionDir)$(ConfigurationName)-$(PlatformName)\vcruntime140.dll" "$(TargetDir)vcruntime140.dll"
-copy /Y /B "$(SolutionDir)$(ConfigurationName)-$(PlatformName)\turbojpeg.dll" "$(TargetDir)turbojpeg.dll"</PostBuildEvent>
+copy /Y /B "$(SolutionDir)$(ConfigurationName)-$(PlatformName)\turbojpeg.dll" "$(TargetDir)turbojpeg.dll"
+copy /Y /B "$(TargetDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Release\$(TargetName)$(TargetExt)"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
