@@ -25,7 +25,7 @@ namespace TimelapseCore
 			if (!isAspNet)
 			{
 				Logger.logType = Environment.UserInteractive ? (LoggingMode.Console | LoggingMode.File) : LoggingMode.File;
-				TimelapseGlobals.Initialize(System.Reflection.Assembly.GetExecutingAssembly().Location);
+				TimelapseGlobals.Initialize(System.Reflection.Assembly.GetEntryAssembly().Location);
 				AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
 			}
 

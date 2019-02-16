@@ -13,6 +13,7 @@ using System.Net;
 using System.Security.AccessControl;
 using BPUtil.SimpleHttp;
 using BPUtil;
+using turbojpegCLI;
 
 namespace TimelapseCore
 {
@@ -22,6 +23,54 @@ namespace TimelapseCore
 		public TimelapseServer(int port, int port_https)
 			: base(port, port_https)
 		{
+			//Thread thr = new Thread(() =>
+			//{
+			//	try
+			//	{
+			//		x264net.X264Options options = new x264net.X264Options(2048, 1536);
+			//		options.Quality = 25;
+			//		options.QualityMinimum = 40;
+			//		options.Preset = x264net.X264Preset.superfast;
+			//		options.Profile = x264net.X264Profile.high;
+			//		options.Tune = x264net.X264Tune.zerolatency;
+			//		options.Threads = 1;
+			//		options.MaxBitRate = 1536;
+			//		using (FileStream fsOut = new FileStream("out-" + TimeUtil.GetTimeInMsSinceEpoch() + ".h264", FileMode.Create, FileAccess.Write, FileShare.Read))
+			//		{
+			//			// Create an X264Net instance. Be sure to dispose it when finished, either by calling Dispose() on it, or by creating it in a using block.
+			//			using (x264net.X264Net encoder = new x264net.X264Net(options))
+			//			{
+			//				using (TJDecompressor decomp = new TJDecompressor())
+			//				{
+			//					CameraSpec cs = TimelapseWrapper.cfg.GetCameraSpec("alpine2");
+			//					string[] fileListURLs = Navigation.GetFileListUrls(cs, "2018/01/23").Split('\n');
+			//					foreach (string url in fileListURLs)
+			//					{
+			//						byte[] jpeg_data = GetImageData(url);
+			//						decomp.setSourceImage(jpeg_data, jpeg_data.Length);
+			//						byte[] rgb_data = decomp.decompress();
+
+			//						byte[] buf = encoder.EncodeFrameAsWholeArray(rgb_data);
+
+			//						// Write frame to file
+			//						fsOut.Write(buf, 0, buf.Length);
+			//					}
+			//				}
+			//			}
+			//		}
+			//	}
+			//	catch (Exception ex)
+			//	{
+			//		Logger.Debug(ex);
+			//	}
+			//	finally
+			//	{
+			//		Console.WriteLine("Finished writing h264 file");
+			//	}
+			//});
+			//thr.IsBackground = true;
+			//thr.Name = "VideoEncoder";
+			//thr.Start();
 		}
 		public override void handleGETRequest(HttpProcessor p)
 		{
@@ -516,6 +565,8 @@ namespace TimelapseCore
 
 		private List<KeyValuePair<string, string>> GetCacheEtagHeaders(TimeSpan maxAge, string etag)
 		{
+			if (etag.Length < 2 || !etag.StartsWith("\"") || !etag.EndsWith("\""))
+				etag = '"' + etag + '"';
 			List<KeyValuePair<string, string>> additionalHeaders = new List<KeyValuePair<string, string>>();
 			additionalHeaders.Add(new KeyValuePair<string, string>("Cache-Control", "max-age=" + (long)maxAge.TotalSeconds + ", public"));
 			additionalHeaders.Add(new KeyValuePair<string, string>("ETag", etag));

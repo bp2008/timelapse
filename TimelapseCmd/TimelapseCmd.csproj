@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TimelapseCmd</RootNamespace>
     <AssemblyName>TimelapseCmd</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -65,7 +65,10 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(SolutionDir)Timelapse\www\*.*" "$(TargetDir)www\*.*" /E /C /R /Y /I
-copy /Y /B "$(TargetDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Release\$(TargetName)$(TargetExt)"</PostBuildEvent>
+copy /Y /B "$(TargetDir)$(TargetName)$(TargetExt)" "$(SolutionDir)Release\$(TargetName)$(TargetExt)"
+copy /Y /B "$(SolutionDir)$(ConfigurationName)-$(PlatformName)\msvcp140.dll" "$(TargetDir)msvcp140.dll"
+copy /Y /B "$(SolutionDir)$(ConfigurationName)-$(PlatformName)\vcruntime140.dll" "$(TargetDir)vcruntime140.dll"
+copy /Y /B "$(SolutionDir)$(ConfigurationName)-$(PlatformName)\x264net.dll" "$(TargetDir)x264net.dll"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

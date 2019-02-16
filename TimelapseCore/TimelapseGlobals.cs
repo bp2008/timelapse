@@ -16,6 +16,7 @@ namespace TimelapseCore
 		public static void Initialize(string exePath)
 		{
 			Globals.Initialize(exePath, "Images/writabledir/");
+			PrivateAccessor.SetStaticFieldValue(typeof(Globals), "errorFilePath", Globals.WritableDirectoryBase + "TimelapseErrors.txt");
 		}
 
 		private static string wwwDirectoryBase = null;

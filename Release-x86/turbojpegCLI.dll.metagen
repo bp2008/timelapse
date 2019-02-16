@@ -1,0 +1,125 @@
+ImageRuntimeVersion: v4.0.30319
+Assembly turbojpegCLI, Version=0.0.*, Culture=Invariant Language (Invariant Country): 
+	hash=SHA1, flags=PublicKey
+Assembly mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Class turbojpegCLI.TJScalingFactor: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(Int32, Int32): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Methods:
+    getNum(): PrivateScope, Public, HideBySig
+    getDenom(): PrivateScope, Public, HideBySig
+    getScaled(Int32): PrivateScope, Public, HideBySig
+    equals(TJScalingFactor IsByValue): PrivateScope, Public, HideBySig
+    isOne(): PrivateScope, Public, HideBySig
+Class turbojpegCLI.TJException: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+  :System.Exception
+    Void .ctor(System.String): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+Class turbojpegCLI.TJ: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    Int32 NUMSAMP IsConst : Public, Static, HasDefault
+    Int32 NUMCS IsConst : Public, Static, HasDefault
+    Int32 NUMPF IsConst : Public, Static, HasDefault
+  Methods:
+    checkSubsampling(SubsamplingOption): PrivateScope, Public, Static, HideBySig
+    checkPixelFormat(PixelFormat): PrivateScope, Public, Static, HideBySig
+    isValidSubsampling(SubsamplingOption): PrivateScope, Public, Static, HideBySig
+    isValidPixelFormat(PixelFormat): PrivateScope, Public, Static, HideBySig
+    getMCUWidth(SubsamplingOption): PrivateScope, Public, Static, HideBySig
+    getMCUHeight(SubsamplingOption): PrivateScope, Public, Static, HideBySig
+    getPixelSize(PixelFormat): PrivateScope, Public, Static, HideBySig
+    getRedOffset(PixelFormat): PrivateScope, Public, Static, HideBySig
+    getGreenOffset(PixelFormat): PrivateScope, Public, Static, HideBySig
+    getBlueOffset(PixelFormat): PrivateScope, Public, Static, HideBySig
+    bufSize(Int32, Int32, SubsamplingOption): PrivateScope, Public, Static, HideBySig
+    getScalingFactors(): PrivateScope, Public, Static, HideBySig
+Class turbojpegCLI.TJCompressor: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(Byte[], Int32, Int32, Int32, Int32, Int32, turbojpegCLI.PixelFormat): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+    Void .ctor(Byte[], Int32, Int32, turbojpegCLI.PixelFormat): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+    Void .ctor(Byte[], Int32, Int32): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Interfaces:
+    System.IDisposable
+  Methods:
+    setSourceImage(Byte[], Int32, Int32, Int32, Int32, Int32, PixelFormat): PrivateScope, Public, HideBySig
+    setSourceImage(Byte[], Int32, Int32, PixelFormat): PrivateScope, Public, HideBySig
+    setSourceImage(Byte[], Int32, Int32): PrivateScope, Public, HideBySig
+    setSubsamp(SubsamplingOption): PrivateScope, Public, HideBySig
+    getSubsamp(): PrivateScope, Public, HideBySig
+    setJPEGQuality(Int32): PrivateScope, Public, HideBySig
+    getJPEGQuality(): PrivateScope, Public, HideBySig
+    compress(): PrivateScope, Public, HideBySig
+    compress(Flag): PrivateScope, Public, HideBySig
+    compress(Byte[]&, Flag): PrivateScope, Public, HideBySig
+    compressToExactSize(): PrivateScope, Public, HideBySig
+    compressToExactSize(Flag): PrivateScope, Public, HideBySig
+    getCompressedSize(): PrivateScope, Public, HideBySig
+    Dispose(): PrivateScope, Public, Final, Virtual, HideBySig
+Struct turbojpegCLI.SubsamplingOption: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    turbojpegCLI.SubsamplingOption SAMP_444 = 0 : Public, Static, Literal, HasDefault
+    turbojpegCLI.SubsamplingOption SAMP_422 = 1 : Public, Static, Literal, HasDefault
+    turbojpegCLI.SubsamplingOption SAMP_420 = 2 : Public, Static, Literal, HasDefault
+    turbojpegCLI.SubsamplingOption SAMP_GRAY = 3 : Public, Static, Literal, HasDefault
+    turbojpegCLI.SubsamplingOption SAMP_440 = 4 : Public, Static, Literal, HasDefault
+    turbojpegCLI.SubsamplingOption SAMP_411 = 5 : Public, Static, Literal, HasDefault
+Struct turbojpegCLI.PixelFormat: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    turbojpegCLI.PixelFormat RGB = 0 : Public, Static, Literal, HasDefault
+    turbojpegCLI.PixelFormat BGR = 1 : Public, Static, Literal, HasDefault
+    turbojpegCLI.PixelFormat RGBX = 2 : Public, Static, Literal, HasDefault
+    turbojpegCLI.PixelFormat BGRX = 3 : Public, Static, Literal, HasDefault
+    turbojpegCLI.PixelFormat XBGR = 4 : Public, Static, Literal, HasDefault
+    turbojpegCLI.PixelFormat XRGB = 5 : Public, Static, Literal, HasDefault
+    turbojpegCLI.PixelFormat GRAY = 6 : Public, Static, Literal, HasDefault
+    turbojpegCLI.PixelFormat RGBA = 7 : Public, Static, Literal, HasDefault
+    turbojpegCLI.PixelFormat BGRA = 8 : Public, Static, Literal, HasDefault
+    turbojpegCLI.PixelFormat ABGR = 9 : Public, Static, Literal, HasDefault
+    turbojpegCLI.PixelFormat ARGB = 10 : Public, Static, Literal, HasDefault
+    turbojpegCLI.PixelFormat CMYK = 11 : Public, Static, Literal, HasDefault
+Struct turbojpegCLI.Colorspace: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    turbojpegCLI.Colorspace RGB = 0 : Public, Static, Literal, HasDefault
+    turbojpegCLI.Colorspace YCbCr = 1 : Public, Static, Literal, HasDefault
+    turbojpegCLI.Colorspace GRAY = 2 : Public, Static, Literal, HasDefault
+    turbojpegCLI.Colorspace CMYK = 3 : Public, Static, Literal, HasDefault
+    turbojpegCLI.Colorspace YCCK = 4 : Public, Static, Literal, HasDefault
+Struct turbojpegCLI.Flag: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    turbojpegCLI.Flag NONE = 0 : Public, Static, Literal, HasDefault
+    turbojpegCLI.Flag BOTTOMUP = 2 : Public, Static, Literal, HasDefault
+    turbojpegCLI.Flag FASTUPSAMPLE = 256 : Public, Static, Literal, HasDefault
+    turbojpegCLI.Flag FASTDCT = 2048 : Public, Static, Literal, HasDefault
+    turbojpegCLI.Flag ACCURATEDCT = 4096 : Public, Static, Literal, HasDefault
+Class turbojpegCLI.TJDecompressor: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(Byte[], Int32): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+    Void .ctor(Byte[]): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Interfaces:
+    System.IDisposable
+  Methods:
+    setSourceImage(Byte[], Int32): PrivateScope, Public, HideBySig
+    getWidth(): PrivateScope, Public, HideBySig
+    getHeight(): PrivateScope, Public, HideBySig
+    getSubsamp(): PrivateScope, Public, HideBySig
+    getColorspace(): PrivateScope, Public, HideBySig
+    getJPEGBuf(): PrivateScope, Public, HideBySig
+    getJPEGSize(): PrivateScope, Public, HideBySig
+    getScaledWidth(Int32, Int32): PrivateScope, Public, HideBySig
+    getScaledHeight(Int32, Int32): PrivateScope, Public, HideBySig
+    decompress(): PrivateScope, Public, HideBySig
+    decompress(PixelFormat, Flag): PrivateScope, Public, HideBySig
+    decompress(Int32, Int32, Int32, PixelFormat, Flag): PrivateScope, Public, HideBySig
+    decompress(Byte[]): PrivateScope, Public, HideBySig
+    decompress(Byte[], PixelFormat, Flag): PrivateScope, Public, HideBySig
+    decompress(Byte[], Int32, Int32, Int32, Int32, Int32, PixelFormat, Flag): PrivateScope, Public, HideBySig
+    Dispose(): PrivateScope, Public, Final, Virtual, HideBySig

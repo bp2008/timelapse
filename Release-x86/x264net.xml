@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        "x264net"
+    </assembly>
+    <members>
+        <member name="M:x264net.X264Net.EncodeFrameAsWholeArray(System.Byte[])">
+            <summary>
+                <para>Encodes a frame, returning a single byte array containing one or more H.264 NAL units which are the encoded form of the frame.</para>
+            </summary>
+            <param name="rgb_data">A byte array containing raw RGB data (3 bytes / 24 bits per pixel).  This array's length must be equal to Width * Height * 3.</param>
+        </member>
+        <member name="M:x264net.X264Net.EncodeFrame(System.Byte[])">
+            <summary>
+                <para>Encodes a frame, returning an array of H.264 NAL units which are the encoded form of the frame.</para>
+            </summary>
+            <param name="rgb_data">A byte array containing raw RGB data (3 bytes / 24 bits per pixel).  This array's length must be equal to Width * Height * 3.</param>
+        </member>
+        <member name="M:x264net.X264Net.#ctor(x264net.X264Options)">
+            <summary>
+                <para>Create an X264Net compressor instance that accepts RGB data frames of a particular size.</para>
+                <para>This instance must be disposed when you are finished with it (Call the Dispose() method, or use a C# "using" block).</para>
+                <para>For best results, use dimensions that are divisible by 16. Otherwise, the encoder may scale your content to a different output resolution, and you may experience padding issues.</para>
+            </summary>
+            <param name="options">The encoding options to use.</param>
+        </member>
+        <member name="T:x264net.X264Net">
+            <summary>
+X264Net, a .NET wrapper for x264.  Each instance must be disposed when you are finished with it.
+</summary>
+        </member>
+        <member name="M:x264net.X264Options.#ctor(System.Int32,System.Int32,System.Int32)">
+            <summary>
+                <para>Create an X264Options instance with default values and no Width or Height assigned.</para>
+            </summary>
+            <param name="width">The width of the video, in pixels.</param>
+            <param name="height">The height of the video, in pixels.</param>
+            <param name="height">The number of threads to use for encoding (default: 1).</param>
+        </member>
+        <member name="M:x264net.X264Options.#ctor(System.Int32,System.Int32)">
+            <summary>
+                <para>Create an X264Options instance with default values and no Width or Height assigned.</para>
+            </summary>
+            <param name="width">The width of the video, in pixels.</param>
+            <param name="height">The height of the video, in pixels.</param>
+        </member>
+        <member name="M:x264net.X264Options.#ctor">
+            <summary>
+                <para>Create an X264Options instance with default values and no Width or Height assigned.</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.IntraRefresh">
+            <summary>
+                <para>If true, iframes are split among multiple frames, preventing the existence of a single huge iframe and smoothing out the stream, supposedly.</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.IframeInterval">
+            <summary>
+                <para>The number of frames between iframes.  Default: 300</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.FPS">
+            <summary>
+                <para>The targeted FPS, important for the encoder to optimize bit rate allocation.  Fractional values are not currently supported.</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.QualityMinimum">
+            <summary>
+                <para>(f_rf_constant_max) A 'worst-case' CRF quality value to target when encoding in Variable Bit Rate mode.  Lower is better quality, but higher makes it easier for the encoder to maintain your bit rate limit.  I think.  Set to -1 for this value to be ignored.  Default: 35</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.Quality">
+            <summary>
+                <para>(f_rf_constant) A CRF quality value to target when encoding in Variable Bit Rate mode.  Lower is better quality.  17 is extremely good quality.  23 is still quite good.  Our default is 25.</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.ConstantBitRate">
+            <summary>
+                <para>If true, the encoding will use a constant bit rate.  If false, the encoding uses variable bit rate targeting a CRF (quality) value. (default: false)</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.BitRateSmoothOverSeconds">
+            <summary>
+                <para>Smooth out bit rate changes over this many seconds.</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.MaxBitRate">
+            <summary>
+                <para>The maximum bitrate to use.  Can set to 0 or below to be ignored if using variable bit rate encoding.  Must be &gt; 0 if using CBR encoding.</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.Threads">
+            <summary>
+                <para>The number of threads to use for encoding (default: 1)</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.Height">
+            <summary>
+                <para>The height of the video, in pixels.</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.Width">
+            <summary>
+                <para>The Colorspace to encode to.  Affects color quality.  Currently unsupported.</para>
+            </summary>
+            <summary>
+                <para>The width of the video, in pixels.</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.Profile">
+            <summary>
+                <para>The X264 Profile to use for encoding.</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.Tune">
+            <summary>
+                <para>The X264 tune option to use for encoding.</para>
+            </summary>
+        </member>
+        <member name="F:x264net.X264Options.Preset">
+            <summary>
+                <para>The X264 preset to use for encoding.</para>
+            </summary>
+        </member>
+        <member name="T:clix.Encoding">
+            <summary>Encoding types for strings</summary>
+        </member>
+        <member name="F:E_UTF16">
+            <summary>UTF-16 encoding</summary>
+            <remarks>
+  This is the suggested encoding for marshaling and the native encoding of .NET strings.
+  It is similar to UTF-8 but uses a minimum of two bytes per character, making the number
+  of bytes required for a given string better predictable. Be aware, however, that UTF-16
+  can still use more than two bytes for a character, so std::wstring::length() might not
+  reflect the actual length of the string.
+</remarks>
+        </member>
+        <member name="F:E_UTF8">
+            <summary>UTF-8 encoding</summary>
+            <remarks>
+  This is the encoding commonly used for multilingual C++ strings. All ASCII characters
+  (0-127) will be represented as single bytes. Be aware that UTF-8 uses more than one
+  byte for extended characters, so std::string::length() might not reflect the actual
+  length of the string in characters if it contains any non-ASCII characters.
+</remarks>
+        </member>
+        <member name="F:E_ANSI">
+            <summary>ANSI encoding</summary>
+            <remarks>
+  This is the default encoding you've most likely been using all around in C++. ANSI
+  means 8 Bit encoding with character codes depending on the system's selected code page.
+</remarks>
+        </member>
+    </members>
+</doc>
