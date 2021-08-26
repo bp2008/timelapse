@@ -1,0 +1,76 @@
+ImageRuntimeVersion: v4.0.30319
+Assembly x264net, Version=0.0.*, Culture=Invariant Language (Invariant Country): 
+	hash=SHA1, flags=PublicKey
+Assembly mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Assembly System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089: 
+	hash=None, flags=None
+Class x264net.X264Options: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(Int32, Int32, Int32): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+    Void .ctor(Int32, Int32): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+    Void .ctor(): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Fields:
+    x264net.X264Preset Preset : Public
+    x264net.X264Tune Tune : Public
+    x264net.X264Profile Profile : Public
+    Int32 Width : Public
+    Int32 Height : Public
+    Int32 Threads : Public
+    Int32 MaxBitRate : Public
+    Double BitRateSmoothOverSeconds : Public
+    Boolean ConstantBitRate : Public
+    Single Quality : Public
+    Single QualityMinimum : Public
+    Int32 FPS : Public
+    Int32 IframeInterval : Public
+    Boolean IntraRefresh : Public
+Class x264net.X264Net: AutoLayout, AnsiClass, Class, Public, BeforeFieldInit
+    Void .ctor(x264net.X264Options): PrivateScope, Public, HideBySig, SpecialName, RTSpecialName
+  Interfaces:
+    System.IDisposable
+  Fields:
+    x264net.X264Options Options : Public
+  Methods:
+    EncodeFrame(Byte[]): PrivateScope, Public, HideBySig
+    EncodeFrameAsWholeArray(Byte[]): PrivateScope, Public, HideBySig
+    Dispose(): PrivateScope, Public, Final, Virtual, HideBySig
+Struct x264net.X264Preset: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    x264net.X264Preset ultrafast = 0 : Public, Static, Literal, HasDefault
+    x264net.X264Preset superfast = 1 : Public, Static, Literal, HasDefault
+    x264net.X264Preset veryfast = 2 : Public, Static, Literal, HasDefault
+    x264net.X264Preset faster = 3 : Public, Static, Literal, HasDefault
+    x264net.X264Preset fast = 4 : Public, Static, Literal, HasDefault
+    x264net.X264Preset medium = 5 : Public, Static, Literal, HasDefault
+    x264net.X264Preset slow = 6 : Public, Static, Literal, HasDefault
+    x264net.X264Preset slower = 7 : Public, Static, Literal, HasDefault
+    x264net.X264Preset veryslow = 8 : Public, Static, Literal, HasDefault
+    x264net.X264Preset placebo = 9 : Public, Static, Literal, HasDefault
+Struct x264net.X264Tune: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    x264net.X264Tune film = 0 : Public, Static, Literal, HasDefault
+    x264net.X264Tune animation = 1 : Public, Static, Literal, HasDefault
+    x264net.X264Tune grain = 2 : Public, Static, Literal, HasDefault
+    x264net.X264Tune stillimage = 3 : Public, Static, Literal, HasDefault
+    x264net.X264Tune psnr = 4 : Public, Static, Literal, HasDefault
+    x264net.X264Tune ssim = 5 : Public, Static, Literal, HasDefault
+    x264net.X264Tune fastdecode = 6 : Public, Static, Literal, HasDefault
+    x264net.X264Tune zerolatency = 7 : Public, Static, Literal, HasDefault
+Struct x264net.X264Profile: AutoLayout, AnsiClass, Class, Public, Sealed, BeforeFieldInit
+  :System.Enum
+  Fields:
+    Int32 value__ : Public, SpecialName, RTSpecialName
+    x264net.X264Profile baseline = 0 : Public, Static, Literal, HasDefault
+    x264net.X264Profile main = 1 : Public, Static, Literal, HasDefault
+    x264net.X264Profile high = 2 : Public, Static, Literal, HasDefault
+    x264net.X264Profile high10 = 3 : Public, Static, Literal, HasDefault
+    x264net.X264Profile high422 = 4 : Public, Static, Literal, HasDefault
+    x264net.X264Profile high444 = 5 : Public, Static, Literal, HasDefault

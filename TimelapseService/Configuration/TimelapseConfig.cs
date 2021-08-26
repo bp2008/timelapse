@@ -18,6 +18,13 @@ namespace Timelapse.Configuration
 		public List<User> users = new List<User>();
 		public List<CameraSpec> cameras = new List<CameraSpec>();
 		public TimelapseGlobalOptions options = new TimelapseGlobalOptions();
+		public IEnumerable<CameraSpec> EnabledCameras
+		{
+			get
+			{
+				return cameras.Where(c => c.enabled);
+			}
+		}
 
 		public string SaveItem(HttpProcessor p)
 		{

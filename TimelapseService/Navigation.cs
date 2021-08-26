@@ -146,7 +146,6 @@ namespace Timelapse
 		}
 		public static string GetFileListUrls(CameraSpec cs, string path)
 		{
-			StringBuilder sb = new StringBuilder();
 			DirectoryInfo diArg = new DirectoryInfo(TimelapseGlobals.ImageArchiveDirectoryBase + cs.id + "/" + path);
 			FileInfo fiBdl = new FileInfo(diArg.Parent.FullName + "/" + diArg.Name + ".bdl");
 

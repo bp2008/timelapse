@@ -220,6 +220,11 @@ namespace Timelapse.Configuration
 		{
 			return id;
 		}
+
+		public AllPageCameraDef GetAllPageCameraDef()
+		{
+			return new AllPageCameraDef(this);
+		}
 	}
 
 	public enum CameraType

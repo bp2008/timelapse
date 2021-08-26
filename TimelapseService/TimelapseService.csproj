@@ -64,7 +64,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API\APIResponse.cs" />
+    <Compile Include="API\Handlers\AllCameras.cs" />
+    <Compile Include="API\Handlers\Image.cs" />
+    <Compile Include="API\TimelapseController.cs" />
     <Compile Include="CameraMaintenance.cs" />
+    <Compile Include="Configuration\AllPageCameraDef.cs" />
+    <Compile Include="ExportTest.cs" />
     <Compile Include="WebServerUtil.cs" />
     <Compile Include="ComparisonComparer.cs" />
     <Compile Include="Configuration\Attributes.cs" />
@@ -110,6 +116,7 @@
     <None Include="packages.config" />
     <None Include="www\jsconfig.json" />
     <None Include="www\Scripts\jquery-1.11.1.min.map" />
+    <None Include="www\vues\all\AllPageCamera.vue" />
     <None Include="www\vues\all\AllPage.vue" />
     <None Include="www\vues\App.vue" />
     <None Include="www\vues\ClientLayout.vue" />
@@ -141,6 +148,7 @@
     <Content Include="webpack.config.js" />
     <Content Include="www\404.html" />
     <Content Include="www\All.html" />
+    <Content Include="www\api\api.js" />
     <Content Include="www\Camera.html" />
     <Content Include="www\Images\ajax-loader-t.gif" />
     <Content Include="www\Images\ajax-loader-t2.gif" />

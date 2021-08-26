@@ -14,12 +14,14 @@ using System.Security.AccessControl;
 using BPUtil.SimpleHttp;
 using BPUtil;
 using turbojpegCLI;
+using BPUtil.MVC;
 
 namespace Timelapse
 {
 	public class TimelapseServer : HttpServer
 	{
 		public static SessionManager sm = new SessionManager();
+		private static MVCMain mvcApi = new MVCMain(System.Reflection.Assembly.GetExecutingAssembly(), typeof(API.Handlers.AllCameras).Namespace);
 		private WebpackProxy webpackProxy = null;
 		public TimelapseServer(int port, int port_https)
 			: base(port, port_https)
@@ -47,7 +49,7 @@ namespace Timelapse
 			//					string[] fileListURLs = Navigation.GetFileListUrls(cs, "2018/01/23").Split('\n');
 			//					foreach (string url in fileListURLs)
 			//					{
-			//						byte[] jpeg_data = GetImageData(url);
+			//						byte[] jpeg_data = WebServerUtil.GetImageData(url);
 			//						decomp.setSourceImage(jpeg_data, jpeg_data.Length);
 			//						byte[] rgb_data = decomp.decompress();
 
@@ -211,6 +213,12 @@ namespace Timelapse
 				}
 				else
 				{
+					if (p.requestedPage.StartsWith("TimelapseAPI/", StringComparison.OrdinalIgnoreCase))
+					{
+						mvcApi.ProcessRequest(p, p.requestedPage.Substring("TimelapseAPI/".Length));
+						return;
+					}
+
 					CameraSpec cs = null;
 					if (p.request_url.Segments.Length > 1)
 						cs = TimelapseWrapper.cfg.GetCameraSpec(p.request_url.Segments[1].Trim('/'));
@@ -323,25 +331,29 @@ namespace Timelapse
 							p.writeFailure("400 Bad Request");
 							return;
 						}
-						if (webpackProxy != null)
-						{
-							// Handle hot module reload provided by webpack dev server.
-							switch (fi.Extension.ToLower())
-							{
-								case ".js":
-								case ".map":
-								case ".css":
-								case ".json":
-									webpackProxy.Proxy(p);
-									return;
-							}
-						}
+						//if (webpackProxy != null)
+						//{
+						//	// Handle hot module reload provided by webpack dev server.
+						//	switch (fi.Extension.ToLower())
+						//	{
+						//		case ".js":
+						//		case ".map":
+						//		case ".css":
+						//		case ".json":
+						//			webpackProxy.Proxy(p);
+						//			return;
+						//	}
+						//}
 						if (!fi.Exists)
 						{
 							if (WebServerUtil.HandleAdminConfiguredRedirect(p))
 								return;
-							p.writeFailure("404 Not Found");
-							return;
+							fi = new FileInfo(wwwDirectoryBase + "Default.html");
+							if (!fi.Exists)
+							{
+								p.writeFailure("404 Not Found");
+								return;
+							}
 						}
 
 						if ((fi.Extension == ".html" || fi.Extension == ".htm") && fi.Length < 256000)
@@ -504,6 +516,11 @@ namespace Timelapse
 					string result = Pages.Admin.AdminPage.HandleSaveList(p, s);
 					p.writeSuccess("text/plain");
 					p.outputStream.Write(HttpUtility.HtmlEncode(result));
+				}
+				else
+				{
+					if (mvcApi.ProcessRequest(p, p.requestedPage) || p.responseWritten)
+						return;
 				}
 			}
 			catch (Exception ex)

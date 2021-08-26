@@ -92,7 +92,7 @@ module.exports =
 			"aliasFields": ["browser"]
 		},
 		devServer: {
-			contentBase: path.join(__dirname, "www/dist"),
+			contentBase: path.join(__dirname, "www"),
 			compress: true,
 			disableHostCheck: true,
 			port: 9000,

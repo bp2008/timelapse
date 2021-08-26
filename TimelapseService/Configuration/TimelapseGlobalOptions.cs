@@ -36,7 +36,7 @@ namespace Timelapse.Configuration
 			+ "RelativeUrlUserEntered RelativeUrlRedirectedTo<br/>"
 			+ "RelativeUrlUserEntered RelativeUrlRedirectedTo<br/>... And so on ...")]
 		[EditorUseTextArea("95%", "20")]
-		public string UrlRedirectList = "/ All";
+		public string UrlRedirectList = "";
 
 		public TimelapseGlobalOptions()
 		{
