@@ -20,6 +20,9 @@ namespace Timelapse.API.Handlers
 			if (cs == null || !cs.enabled)
 				return Error("Camera Not Found", "404 Not Found");
 
+			if (!IpWhitelist.IsWhitelisted(Context.httpProcessor.RemoteIPAddressStr, cs.ipWhitelist))
+				return Error("Forbidden", "403 Forbidden");
+
 			string latestImagePathPart;
 			try
 			{

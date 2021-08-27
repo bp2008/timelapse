@@ -38,6 +38,11 @@ namespace Timelapse.Configuration
 		[EditorUseTextArea("95%", "20")]
 		public string UrlRedirectList = "";
 
+		[EditorName("Trusted Proxy Servers")]
+		[EditorHint("Enter a comma separated list of remote addresses that are allowed to use the X-Forwarded-For header.")]
+		[EditorUseTextArea("95%", "20")]
+		public string TrustedProxyServers = "";
+
 		public TimelapseGlobalOptions()
 		{
 		}

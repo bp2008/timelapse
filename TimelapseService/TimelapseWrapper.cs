@@ -62,6 +62,7 @@ namespace Timelapse
 			startTime = DateTime.Now;
 
 			httpServer = new TimelapseServer(cfg.webport, cfg.webport_https);
+			httpServer.XForwardedForHeader = true;
 			httpServer.SocketBound += HttpServer_SocketBound;
 			httpServer.Start();
 

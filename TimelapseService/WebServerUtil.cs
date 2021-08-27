@@ -17,11 +17,13 @@ namespace Timelapse
 {
 	public static class WebServerUtil
 	{
-		public static string GetAllCamerasJavascriptArray()
+		public static string GetAllCamerasJavascriptArray(string ip)
 		{
 			List<string> camerasList = new List<string>();
 			foreach (CameraSpec cs in TimelapseWrapper.cfg.cameras)
 			{
+				if (!IpWhitelist.IsWhitelisted(ip, cs.ipWhitelist))
+					continue;
 				if (cs.showOnAllPage)
 				{
 					string imgsrc = "", imglink = "", namelink = "";
@@ -50,7 +52,8 @@ namespace Timelapse
 						imgsrc = cs.id + "/latest.jpg";
 						imgDate = timeObj.ToJavaScriptMilliseconds();
 					}
-					camerasList.Add("['" + HttpUtility.JavaScriptStringEncode(cs.id) + "', '" + HttpUtility.JavaScriptStringEncode(cs.name) + "', '" + HttpUtility.JavaScriptStringEncode(imgsrc) + "', '" + HttpUtility.JavaScriptStringEncode(imglink) + "', '" + HttpUtility.JavaScriptStringEncode(namelink) + "', '" + HttpUtility.JavaScriptStringEncode(cs.allPageOverlayMessage) + "', " + imgDate + "]");
+					string isPrivileged = string.IsNullOrWhiteSpace(cs.ipWhitelist) ? "false" : "true";
+					camerasList.Add("['" + HttpUtility.JavaScriptStringEncode(cs.id) + "', '" + HttpUtility.JavaScriptStringEncode(cs.name) + "', '" + HttpUtility.JavaScriptStringEncode(imgsrc) + "', '" + HttpUtility.JavaScriptStringEncode(imglink) + "', '" + HttpUtility.JavaScriptStringEncode(namelink) + "', '" + HttpUtility.JavaScriptStringEncode(cs.allPageOverlayMessage) + "', " + imgDate + ", " + isPrivileged + "]");
 				}
 			}
 			return "[" + string.Join(",", camerasList) + "]";

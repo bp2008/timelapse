@@ -48,6 +48,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>3rdParty\IonicZip\Ionic.Zip.dll</HintPath>
     </Reference>
+    <Reference Include="IPAddressRange, Version=4.2.0.0, Culture=neutral, PublicKeyToken=578e3c3d17e7c751, processorArchitecture=MSIL">
+      <HintPath>..\packages\IPAddressRange.4.2.0\lib\net45\IPAddressRange.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -71,6 +74,7 @@
     <Compile Include="CameraMaintenance.cs" />
     <Compile Include="Configuration\AllPageCameraDef.cs" />
     <Compile Include="ExportTest.cs" />
+    <Compile Include="IpWhitelist.cs" />
     <Compile Include="WebServerUtil.cs" />
     <Compile Include="ComparisonComparer.cs" />
     <Compile Include="Configuration\Attributes.cs" />

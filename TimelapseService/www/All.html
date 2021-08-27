@@ -19,22 +19,22 @@
 			if (imagesWide > maxImagesWide)
 				imagesWide = maxImagesWide;
 			for (var i = 0; i < camData.length; i++)
-				AddCamera(camData[i][0], camData[i][1], camData[i][2], camData[i][3], camData[i][4], camData[i][5], camData[i][6]);
+				AddCamera(camData[i][0], camData[i][1], camData[i][2], camData[i][3], camData[i][4], camData[i][5], camData[i][6], camData[i][7]);
 			doResize();
 		});
-		function AddCamera(id, name, imgsrc, imglink, namelink, overlay, dateMs)
+		function AddCamera(id, name, imgsrc, imglink, namelink, overlay, dateMs, isAvailableByWhitelist)
 		{
 			var imgAge = new Date().getTime() - dateMs;
 			if (imgAge < 12 * 60 * 60 * 1000) // 12 hours
 				overlay = "";
-			$("body").append('<div class="camdiv">'
+			$("body").append('<div class="camdiv' + (isAvailableByWhitelist ? ' whitelisted' : '') + '"' + (isAvailableByWhitelist ? ' title="Not public"' : '') + '>'
 				+ '<div class="imgwrapper">'
-				 + '<div class="verticalAlignHelper"></div>'
-				 + '<a href="' + imglink + '">'
-				 + (overlay.length > 0 ? '<div class="camoverlay"><div class="verticalAlignHelper"></div><div class="overlaytext">' + overlay + '</div></div>' : '') + '<img src="' + imgsrc + '" /></a>'
+				+ '<div class="verticalAlignHelper"></div>'
+				+ '<a href="' + imglink + '">'
+				+ (overlay.length > 0 ? '<div class="camoverlay"><div class="verticalAlignHelper"></div><div class="overlaytext">' + overlay + '</div></div>' : '') + '<img src="' + imgsrc + '" /></a>'
 				+ '</div>'
-			   + '<div class="camname"><a href="' + namelink + '">' + name + '</a>'
-			  + '</div>');
+				+ '<div class="camname"><a href="' + namelink + '">' + name + '</a>'
+				+ '</div>');
 		}
 		$(window).resize(function () { doResize() });
 		$(window).load(function () { doResize() });
@@ -133,6 +133,15 @@
 			margin: 20px;
 			vertical-align: top;
 		}
+
+			.camdiv.whitelisted
+			{
+				background: radial-gradient(circle, rgba(183,183,183,1) 0%, rgba(255,255,255,0) 100%);
+				border-bottom: 2px dashed red;
+				padding-bottom: 10px;
+				border-top: 2px dashed red;
+				padding-top: 10px;
+			}
 
 		.camname
 		{

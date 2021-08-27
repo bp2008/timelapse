@@ -123,6 +123,9 @@ namespace Timelapse.Configuration
 		[EditorName("\"All\" page overlay message")]
 		[EditorHint("<br/>A message that will be overlayed on the camera image on the <a href=\"../all\">all</a> page if the image hasn't updated in longer than 12 hours.  You might enter \"Offline\" here, or another descriptive message.")]
 		public string allPageOverlayMessage = "";
+		[EditorName("IP Address Whitelist")]
+		[EditorHint("<br/>A whitelist of IP addresses or ranges that are allowed to view this camera. E.g. \"192.168.0.0/24,1.2.3.4,10.0.0.0-10.255.255.255,fe80::0-fe81::0")]
+		public string ipWhitelist = "";
 
 		public int order = -1;
 

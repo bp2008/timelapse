@@ -15,6 +15,7 @@ namespace Timelapse.API.Handlers
 		{
 			IEnumerable<AllPageCameraDef> cams = TimelapseWrapper.cfg.EnabledCameras
 				.Where(cam => cam.showOnAllPage)
+				.Where(cam => IpWhitelist.IsWhitelisted(Context.httpProcessor.RemoteIPAddressStr, cam.ipWhitelist))
 				.Select(cam => cam.GetAllPageCameraDef());
 			return Json(cams);
 		}

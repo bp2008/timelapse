@@ -22,7 +22,7 @@ namespace TimelapseService
 			{
 				if (Debugger.IsAttached || (args.Length == 1 && args[0] == "cmd"))
 				{
-					ConsoleAppHelper.AllocateConsole();
+					BPUtil.NativeWin.WinConsole.Initialize();
 					TimelapseWrapper server = new TimelapseWrapper(false);
 					server.SocketBound += Server_SocketBound;
 					server.Start();
