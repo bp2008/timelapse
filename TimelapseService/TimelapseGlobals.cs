@@ -46,6 +46,6 @@ namespace Timelapse
 				return imageArchiveDirectoryBase;
 			}
 		}
-		public static string Version = "0.7";
+		public static string Version = "0.8";
 	}
 }

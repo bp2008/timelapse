@@ -19,6 +19,46 @@ namespace Timelapse
 		public static DateTime startTime = DateTime.MinValue;
 		public static TimelapseConfig cfg;
 		public event EventHandler<string> SocketBound = delegate { };
+		private Thread thrMaintainCameras = null;
+
+		private static void MaintainCamerasLoop()
+		{
+			try
+			{
+				while (true)
+				{
+					try
+					{
+						foreach (CameraSpec cs in cfg.cameras)
+						{
+							if (cs.enabled)
+							{
+								try
+								{
+									CameraMaintenance.MaintainCamera(cs);
+								}
+								catch (ThreadAbortException) { return; }
+								catch (Exception ex)
+								{
+									Logger.Debug(ex);
+								}
+							}
+						}
+					}
+					catch (ThreadAbortException) { return; }
+					catch (Exception ex)
+					{
+						Logger.Debug(ex);
+					}
+					Thread.Sleep(60000 * 10);
+				}
+			}
+			catch (ThreadAbortException) { return; }
+			catch (Exception ex)
+			{
+				Logger.Debug(ex);
+			}
+		}
 
 		public TimelapseWrapper(bool isAspNet)
 		{
@@ -67,6 +107,12 @@ namespace Timelapse
 			httpServer.Start();
 
 			Logger.StartLoggingThreads();
+
+			thrMaintainCameras?.Abort();
+			thrMaintainCameras = new Thread(MaintainCamerasLoop);
+			thrMaintainCameras.Name = "Maintain Cameras Thread";
+			thrMaintainCameras.IsBackground = true;
+			thrMaintainCameras.Start();
 		}
 
 		private void HttpServer_SocketBound(object sender, string e)
@@ -82,6 +128,9 @@ namespace Timelapse
 				httpServer.Join(1000);
 			}
 			Logger.StopLoggingThreads();
+
+			thrMaintainCameras?.Abort();
+			thrMaintainCameras = null;
 		}
 		#endregion
 
