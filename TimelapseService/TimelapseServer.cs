@@ -188,7 +188,7 @@ namespace Timelapse
 					p.writeSuccess();
 					p.outputStream.Write(Pages.TimeZoneList.GetHtml());
 				}
-				else if (requestedPageLower.StartsWith("imgarchive/"))
+				else if (requestedPageLower.StartsWith(TimelapseGlobals.ImageArchiveFolderNameLower + "/"))
 				{
 					p.writeFailure();
 				}
@@ -368,8 +368,8 @@ namespace Timelapse
 							//fi = new FileInfo(wwwDirectoryBase + "Default.html");
 							//if (!fi.Exists)
 							//{
-								p.writeFailure("404 Not Found");
-								return;
+							p.writeFailure("404 Not Found");
+							return;
 							//}
 						}
 

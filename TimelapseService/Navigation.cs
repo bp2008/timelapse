@@ -71,7 +71,7 @@ namespace Timelapse
 				sb.Append("Directory does not exist.  Try reloading this page.");
 			else
 			{
-				if (diArg.Parent.Name.ToLower() != "imgarchive")
+				if (diArg.Parent.Name.ToLower() != TimelapseGlobals.ImageArchiveFolderNameLower)
 				{
 					sb.Append("<div id=\"navheader\">");
 					sb.Append("<a class=\"linkup\" href=\"");
@@ -172,7 +172,7 @@ namespace Timelapse
 		private static string GetLinkPath(DirectoryInfo di, bool removeCameraId = true)
 		{
 			Stack<string> stk = new Stack<string>();
-			while (di != null && di.Name.ToLower() != "imgarchive")
+			while (di != null && di.Name.ToLower() != TimelapseGlobals.ImageArchiveFolderNameLower)
 			{
 				stk.Push(di.Name);
 				di = di.Parent;

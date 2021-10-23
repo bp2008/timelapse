@@ -42,10 +42,28 @@ namespace Timelapse
 			get
 			{
 				if (imageArchiveDirectoryBase == null)
-					imageArchiveDirectoryBase = Globals.ApplicationRoot + "/Images/imgarchive/";
+				{
+					if (string.IsNullOrWhiteSpace(TimelapseWrapper.cfg.imgArchivePath))
+						imageArchiveDirectoryBase = Globals.ApplicationRoot + "/Images/imgarchive/";
+					else
+						imageArchiveDirectoryBase = TimelapseWrapper.cfg.imgArchivePath.Replace('\\', '/').TrimEnd('/') + '/';
+				}
 				return imageArchiveDirectoryBase;
 			}
 		}
-		public static string Version = "0.8";
+		private static string imageArchiveFolderNameLower = null;
+		/// <summary>
+		/// Gets lower case name of the image archive folder.
+		/// </summary>
+		public static string ImageArchiveFolderNameLower
+		{
+			get
+			{
+				if (imageArchiveFolderNameLower == null)
+					imageArchiveFolderNameLower = new DirectoryInfo(ImageArchiveDirectoryBase).Name.ToLower();
+				return imageArchiveFolderNameLower;
+			}
+		}
+		public static string Version = "0.9";
 	}
 }

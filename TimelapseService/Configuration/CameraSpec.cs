@@ -141,8 +141,8 @@ namespace Timelapse.Configuration
 		protected override string validateFieldValues()
 		{
 			id = id.ToLower();
-			if (id == "imgarchive")
-				return "0Camera ID cannot be 'imgarchive'";
+			if (id == TimelapseGlobals.ImageArchiveFolderNameLower)
+				return "0Camera ID cannot be '" + TimelapseGlobals.ImageArchiveFolderNameLower + "'";
 			if (string.IsNullOrWhiteSpace(name))
 				return "0Camera name must not contain only whitespace.";
 			if (!Util.IsAlphaNumeric(name, true))
